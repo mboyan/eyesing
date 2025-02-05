@@ -61,7 +61,7 @@ uvec3 pcg3d(uvec3 v) {
 
 void main(){
 
-    in numCells = 10;
+    int numCells = 10;
 
     vec2 st = gl_FragCoord.xy/iResolution.xy;
 
