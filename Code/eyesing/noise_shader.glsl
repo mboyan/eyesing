@@ -18,7 +18,6 @@ uniform int       iFrame;                // shader playback frame
 uniform vec4      iMouse;                // mouse pixel coords. xy: current (if MLB down), zw: click
 uniform vec4      iDate;                 // (year, month, day, time in seconds)
 
-
 #define PI 3.14159265358979323846
 
 float rand(vec2 st) {
