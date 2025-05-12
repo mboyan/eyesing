@@ -107,6 +107,7 @@ void draw(){
 
 void mouseDragged(){
   shader.set("beta", mouseX / float(width));
+  //shader.set("beta", map(mouseX / float(width), 0.0, 1.0, 0.0, 10.0));
   //shader.set("field", mouseY / float(width));
   shader.set("field", map(mouseY, 0, width, -1.0, 1.0));
 }

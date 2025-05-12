@@ -49,6 +49,6 @@ void main(){
 	vec4 noise = texture2D(noiseTexture2, st);
 	vec4 newSpin = mix(tex, 1.0 - tex, step(pacc, noise) * sel);
 
-	gl_FragColor = vec4(newSpin.xyz, 1.);
-	// gl_FragColor = vec4(vec3(step(pacc, noise) * sel), 1.);
+	// gl_FragColor = vec4(newSpin.xyz, 1.);
+	gl_FragColor = vec4(vec3(step(pacc, noise) * sel), 1.);
 }
