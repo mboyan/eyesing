@@ -34,21 +34,24 @@ float hamiltonian(float _s, float _sl, float _sr, float _st, float _sb, float _J
 
 void main(){
 	vec2 st = gl_FragCoord.xy/iResolution.xy;
-	vec4 tex = step(0.5, texture2D(spinTexture, st));
-	vec4 texl = step(0.5, texture2D(spinTexture, st + vec2(-1./iResolution.x, 0.)));
-	vec4 texr = step(0.5, texture2D(spinTexture, st + vec2(1./iResolution.x, 0.)));
-	vec4 text = step(0.5, texture2D(spinTexture, st + vec2(0., -1./iResolution.y)));
-	vec4 texb = step(0.5, texture2D(spinTexture, st + vec2(0., 1./iResolution.y)));
+	float tex = step(0.5, texture2D(spinTexture, st)).x;
+	float texl = step(0.5, texture2D(spinTexture, st + vec2(-1./iResolution.x, 0.))).x;
+	float texr = step(0.5, texture2D(spinTexture, st + vec2(1./iResolution.x, 0.))).x;
+	float text = step(0.5, texture2D(spinTexture, st + vec2(0., -1./iResolution.y))).x;
+	float texb = step(0.5, texture2D(spinTexture, st + vec2(0., 1./iResolution.y))).x;
 
-	float sel = step(254./256., texture2D(noiseTexture1, st).x);
-	float hold = hamiltonian(tex.x, texl.x, texr.x, text.x, texb.x, interact, field);
-	float hnew = hamiltonian(1.0 - tex.x, texl.x, texr.x, text.x, texb.x, interact, field);
+	float sel = step(1.0, texture2D(noiseTexture1, st).x);
+	// float sel = (10000.0 / (iResolution.x * iResolution.y)) * texture2D(noiseTexture1, st).x;
+	float hold = hamiltonian(tex, texl, texr, text, texb, interact, field);
+	float hnew = hamiltonian(1.0 - tex, texl, texr, text, texb, interact, field);
 	float dH = hnew - hold;
 
-	float pacc = exp(-max(dH * beta, 0.0));
-	vec4 noise = texture2D(noiseTexture2, st);
-	vec4 newSpin = mix(tex, 1.0 - tex, step(pacc, noise) * sel);
+	float pacc = min(exp(-dH * beta), 1.0);
+	float noise = texture2D(noiseTexture2, st).x;
+	float newSpin = mix(tex, 1.0 - tex, step(pacc, noise) * sel);
 
-	// gl_FragColor = vec4(newSpin.xyz, 1.);
-	gl_FragColor = vec4(vec3(step(pacc, noise) * sel), 1.);
+	gl_FragColor = vec4(vec3(newSpin, pacc, 0.0), 1.);
+	// gl_FragColor = vec4(vec3(step(pacc, noise) * sel), 1.);
+	// gl_FragColor = vec4(vec3(pacc), 1.);
+	// gl_FragColor = vec4(vec3(tex-texl-texr-text-texb), 1.);
 }

@@ -16,8 +16,8 @@ void setup(){
   shader = loadShader("eyesing_shader.glsl");
   shader.set("iResolution", float(width), float(height), 0.0);
   
-  //size(500, 500, P2D);
-  fullScreen(P2D);
+  size(500, 500, P2D);
+  //fullScreen(P2D);
   
   // Draw noise
   noiseGraphics.beginDraw();
@@ -32,12 +32,14 @@ void setup(){
   // Pass initial parameters
   shader.set("beta", 0.5);
   shader.set("field", 0.0);
-  shader.set("interact", 1.0);
+  shader.set("interact", 100.0);
   
-  //hist = new float[width];
-  //for (int i = 0; i < hist.length; i++){
-  //  hist[i] = 0;
-  //}
+  hist = new float[width];
+  for (int i = 0; i < hist.length; i++){
+    hist[i] = 0;
+  }
+  
+  //frameRate(1);
 }
 
 
@@ -53,7 +55,7 @@ void draw(){
   noiseGraphics.rect(0, 0, width, height);
   noiseGraphics.endDraw();
   
-  // Pass initial spin state
+  // Pass selection noise
   shader.set("noiseTexture1", noiseGraphics);
   
   // Update noise shader
@@ -103,11 +105,21 @@ void draw(){
   //for (int i = 0; i < hist.length; i++){
   //  hist[i] = 0;
   //}
+  
+  if(frameCount < 30){
+    saveFrame();
+  }
 }
 
 void mouseDragged(){
-  shader.set("beta", mouseX / float(width));
+  shader.set("beta", 100.0*mouseX / float(width));
+  println("beta = " + str(100.0*mouseX / float(width)));
   //shader.set("beta", map(mouseX / float(width), 0.0, 1.0, 0.0, 10.0));
   //shader.set("field", mouseY / float(width));
-  shader.set("field", map(mouseY, 0, width, -1.0, 1.0));
+  //shader.set("field", map(mouseY, 0, width, -1.0, 1.0));
+  //println("field = " + str(map(mouseY, 0, width, -1.0, 1.0)));
 }
+
+//void keyPressed(){
+//  saveFrame();
+//}
