@@ -4,6 +4,10 @@ PGraphics spinGraphics, noiseGraphics;
 
 float[] hist;
 
+ScreenScanner screenScanner;
+boolean scanToggle, scannerCtrl, scannerAdapt;
+float bSampleA, bSampleB;
+
 void setup(){
   
   spinGraphics = createGraphics(width, height, P2D);
@@ -42,13 +46,11 @@ void setup(){
   
   //frameRate(1);
   
-  // Draw spins
-  //spinGraphics.beginDraw();
-  //spinGraphics.shader(shader);
-  //spinGraphics.fill(0);
-  //spinGraphics.rect(0, 0, width, height);
-  //spinGraphics.endDraw();
-  //image(spinGraphics, 0, 0);
+  // Create and turn on scanner
+  screenScanner = new ScreenScanner(width*0.5, height*0.5, 100);
+  scanToggle = true;
+  scannerCtrl = true;
+  scannerAdapt = true;
 }
 
 
@@ -120,7 +122,32 @@ void draw(){
   //  saveFrame();
   //}
   
-  text(str(frameCount), 50, 50);
+  
+  
+  if(scanToggle){
+    
+    bSampleA = screenScanner.scan();
+    fill(255, 0, 0);
+    textSize(50);
+    text(str(bSampleA), 50, 50);
+    text(str(screenScanner.stepSize), 50, 120);
+    
+    screenScanner.updatePos();
+    screenScanner.show();
+    
+    // Adapt scanner motion
+    if(scannerAdapt){
+      bSampleB = screenScanner.scan();
+      //screenScanner.stepSize += 4*(pow(bSampleA - 0.5, 2) - pow(bSampleB - 0.5, 2));
+      screenScanner.stepSize = 4*pow(bSampleA - 0.5, 2);
+    }
+    
+    // Control parameters with scanner
+    if(scannerCtrl){
+      shader.set("beta", exp(map(screenScanner.pos.x, 0, width, -10.0, 10.0)));
+      shader.set("field", map(screenScanner.pos.y, 0, height, -1.0, 1.0));
+    }
+  }
 }
 
 void mouseDragged(){

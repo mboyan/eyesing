@@ -61,7 +61,7 @@ void main(){
 	float newTex = mix(tex, 1. - tex, step(noise, pacc)*sel);
 
 	// gl_FragColor = vec4(vec3(newTex, pacc, 0.5*dH+0.5), 1.);
-	gl_FragColor = vec4(vec3(newTex), 1.);
+	gl_FragColor = vec4(vec3(newTex), 1.0);
 	// gl_FragColor = vec4(vec3(step(pacc, noise) * sel), 1.);
 	// gl_FragColor = vec4(vec3(sel), 1.);
 	// gl_FragColor = vec4(vec3(tex-texl-texr-text-texb), 1.);
