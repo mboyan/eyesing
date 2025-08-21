@@ -16,10 +16,10 @@ void setup(){
   shader = loadShader("eyesing_shader.glsl");
   shader.set("iResolution", float(width), float(height), 0.0);
   
-  size(500, 500, P2D);
-  //fullScreen(P2D);
+  //size(500, 500, P2D);
+  fullScreen(P2D);
   
-  // Draw noise
+  // Compute initial noise
   noiseGraphics.beginDraw();
   noiseGraphics.shader(noiseShader);
   noiseGraphics.fill(0);
@@ -32,7 +32,8 @@ void setup(){
   // Pass initial parameters
   shader.set("beta", 0.5);
   shader.set("field", 0.0);
-  shader.set("interact", 100.0);
+  shader.set("interact", 0.25);
+  shader.set("selDensity", exp(-0.1));
   
   hist = new float[width];
   for (int i = 0; i < hist.length; i++){
@@ -40,6 +41,14 @@ void setup(){
   }
   
   //frameRate(1);
+  
+  // Draw spins
+  //spinGraphics.beginDraw();
+  //spinGraphics.shader(shader);
+  //spinGraphics.fill(0);
+  //spinGraphics.rect(0, 0, width, height);
+  //spinGraphics.endDraw();
+  //image(spinGraphics, 0, 0);
 }
 
 
@@ -68,8 +77,9 @@ void draw(){
   noiseGraphics.rect(0, 0, width, height);
   noiseGraphics.endDraw();
   
-  // Pass initial spin state
+  // Pass acceptance test noise
   shader.set("noiseTexture2", noiseGraphics);
+  //shader.set("spinTexture", spinGraphics);
   
   // Update processing shader
   //shader.set("iTime", float(frameCount));
@@ -106,18 +116,20 @@ void draw(){
   //  hist[i] = 0;
   //}
   
-  if(frameCount < 30){
-    saveFrame();
-  }
+  //if(frameCount < 30){
+  //  saveFrame();
+  //}
+  
+  text(str(frameCount), 50, 50);
 }
 
 void mouseDragged(){
-  shader.set("beta", 100.0*mouseX / float(width));
-  println("beta = " + str(100.0*mouseX / float(width)));
+  shader.set("beta", exp(map(mouseX, 0, width, -10.0, 10.0)));
+  println("beta = " + str(exp(map(mouseX, 0, width, -10.0, 10.0))));
   //shader.set("beta", map(mouseX / float(width), 0.0, 1.0, 0.0, 10.0));
   //shader.set("field", mouseY / float(width));
-  //shader.set("field", map(mouseY, 0, width, -1.0, 1.0));
-  //println("field = " + str(map(mouseY, 0, width, -1.0, 1.0)));
+  shader.set("field", map(mouseY, 0, height, -1.0, 1.0));
+  println("field = " + str(map(mouseY, 0, height, -1.0, 1.0)));
 }
 
 //void keyPressed(){
