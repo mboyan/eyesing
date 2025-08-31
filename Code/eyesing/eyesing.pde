@@ -1,3 +1,6 @@
+import ddf.minim.*;
+import ddf.minim.analysis.*;
+
 PShader shader, noiseShader;
 PGraphics spinGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC;
 
@@ -17,7 +20,24 @@ float modA, modB, modC;
 
 float penalty;
 
+// Audio reactivity
+Minim minim;
+FFT fft;
+AudioPlayer in;
+boolean audioReact;
+float[] bands;
+int bandShiftIdx;
+float[] lvlThresh = {2.0, 0.5, 0.25, 0.125};
+
 void setup(){
+  
+  // Initialize minim and track
+  audioReact = true;
+  minim = new Minim(this);
+  in = minim.loadFile("sample_live_coding_jam.wav", 1024); // change to mic input when needed
+  fft = new FFT(in.bufferSize(), in.sampleRate());
+  bands = new float[4];
+  bandShiftIdx = 0;
   
   spinGraphics = createGraphics(width, height, P2D);
   noiseGraphics = createGraphics(width, height, P2D);
@@ -91,6 +111,44 @@ void setup(){
 
 
 void draw(){
+  
+  // ===== Analyze sound =====
+  if(frameCount > 30){
+    in.play();
+  }
+  if(audioReact){
+    fft.forward(in.left);
+    
+    // Get low freqs
+    bands[bandShiftIdx] = 0;
+    for(int i = 0; i < fft.specSize()*0.25; i++){
+      bands[bandShiftIdx] += fft.getBand(i);
+    }
+    bands[bandShiftIdx] /= fft.specSize()*0.25;
+    
+    // Get mid A freqs
+    bands[(bandShiftIdx+1)%4] = 0;
+    for(int i = int(fft.specSize()*0.25); i < fft.specSize()*0.5; i++){
+      bands[(bandShiftIdx+1)%4] += fft.getBand(i);
+    }
+    bands[(bandShiftIdx+1)%4] /= fft.specSize()*0.25;
+    
+    // Get mid B freqs
+    bands[(bandShiftIdx+2)%4] = 0;
+    for(int i = int(fft.specSize()*0.5); i < fft.specSize()*0.75; i++){
+      bands[(bandShiftIdx+2)%4] += fft.getBand(i);
+    }
+    bands[(bandShiftIdx+2)%4] /= fft.specSize()*0.25;
+    
+    // Get high freqs
+    bands[(bandShiftIdx+3)%4] = 0;
+    for(int i = int(fft.specSize()*0.75); i < fft.specSize(); i++){
+      bands[(bandShiftIdx+3)%4] += fft.getBand(i);
+    }
+    bands[(bandShiftIdx+3)%4] /= fft.specSize()*0.25;
+  }
+  
+  // ===========================
   
   // Draw parameter graphics
   if(textureParamCtrl){
@@ -191,12 +249,35 @@ void draw(){
   if(scanToggle){
     
     bSampleA = screenScanner.scan();
-    fill(255, 0, 0);
-    textSize(50);
-    text(str(bSampleA), 50, 50);
-    text(str(screenScanner.pos.z), 50, 120);
+    //fill(255, 0, 0);
+    //textSize(50);
+    //text(str(bSampleA), 50, 50);
+    //text(str(screenScanner.pos.z), 50, 120);
     
     screenScanner.updatePos();
+    
+    // Flicker bands
+    if(audioReact){
+      fill(0);
+      noStroke();
+      rectMode(CORNER);
+      if(bands[0] < lvlThresh[0]){
+        rect(screenScanner.pos.x + screenScanner.winSize*0.5, screenScanner.pos.y, width, height);
+        rect(screenScanner.pos.x, screenScanner.pos.y + screenScanner.winSize*0.5, width, height);
+      }
+      if(bands[1] < lvlThresh[1]){
+        rect(screenScanner.pos.x + screenScanner.winSize*0.5, screenScanner.pos.y, width, -height);
+        rect(screenScanner.pos.x, screenScanner.pos.y - screenScanner.winSize*0.5, width, -height);
+      }
+      if(bands[2] < lvlThresh[2]){
+        rect(screenScanner.pos.x - screenScanner.winSize*0.5, screenScanner.pos.y, -width, height);
+        rect(screenScanner.pos.x, screenScanner.pos.y + screenScanner.winSize*0.5, -width, height);
+      }
+      if(bands[3] < lvlThresh[3]){
+        rect(screenScanner.pos.x - screenScanner.winSize*0.5, screenScanner.pos.y, -width, -height);
+        rect(screenScanner.pos.x, screenScanner.pos.y - screenScanner.winSize*0.5, -width, -height);
+      }
+    }
     screenScanner.show();
     
     // Adapt scanner motion
