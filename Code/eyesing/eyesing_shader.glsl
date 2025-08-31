@@ -21,6 +21,9 @@ uniform vec4      iDate;                 // (year, month, day, time in seconds)
 uniform sampler2D spinTexture;
 uniform sampler2D noiseTexture1;
 uniform sampler2D noiseTexture2;
+uniform sampler2D paramTextureBeta;
+uniform sampler2D paramTextureField;
+uniform sampler2D paramTextureInteract;
 
 uniform float beta;
 uniform float field;
@@ -35,6 +38,13 @@ float hamiltonian(float _s, float _sl, float _sr, float _st, float _sb, float _J
 
 void main(){
 	vec2 st = gl_FragCoord.xy/iResolution.xy;
+
+	// Modulate with textures
+	float betaMod = max(0.0, beta + exp(texture2D(paramTextureBeta, st).x*20. - 10.));
+    float fieldMod = field + texture2D(paramTextureField, st).x*2. - 1.;
+    float interactMod = interact + texture2D(paramTextureInteract, st).x*2. - 1.;
+
+	// Read spin texture
 	float tex = step(0.5, texture2D(spinTexture, st).x);
 	float texl = step(0.5, texture2D(spinTexture, st + vec2(-1./iResolution.x, 0.)).x);
 	float texr = step(0.5, texture2D(spinTexture, st + vec2(1./iResolution.x, 0.)).x);
@@ -51,11 +61,11 @@ void main(){
 	// float sel = step(1.0, texture2D(noiseTexture1, st).x);
 	float sel = step(selDensity, texture2D(noiseTexture1, st).x);
 	// float sel = (10000.0 / (iResolution.x * iResolution.y)) * texture2D(noiseTexture1, st).x;
-	float hold = hamiltonian(spin, spinl, spinr, spint, spinb, interact, field);
-	float hnew = hamiltonian(-spin, spinl, spinr, spint, spinb, interact, field);
+	float hold = hamiltonian(spin, spinl, spinr, spint, spinb, interactMod, fieldMod);
+	float hnew = hamiltonian(-spin, spinl, spinr, spint, spinb, interactMod, fieldMod);
 	float dH = hnew - hold;
 
-	float pacc = min(exp(-dH * beta), 1.0);
+	float pacc = min(exp(-dH * betaMod), 1.0);
 	float noise = texture2D(noiseTexture2, st).x;
 	// float newTex = mix(tex, 1. - tex, step(1. - pacc, noise) * sel);
 	float newTex = mix(tex, 1. - tex, step(noise, pacc)*sel);
