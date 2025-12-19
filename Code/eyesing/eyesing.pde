@@ -32,7 +32,7 @@ float[] lvlThresh = {2.0, 0.5, 0.25, 0.125};
 void setup(){
   
   // Initialize minim and track
-  audioReact = true;
+  audioReact = false;//true;
   minim = new Minim(this);
   in = minim.loadFile("sample_live_coding_jam.wav", 1024); // change to mic input when needed
   fft = new FFT(in.bufferSize(), in.sampleRate());
@@ -283,12 +283,8 @@ void draw(){
     // Adapt scanner motion
     if(scannerAdapt){
       bSampleB = screenScanner.scan();
-      //screenScanner.stepSize += 4*(pow(bSampleA - 0.5, 2) - pow(bSampleB - 0.5, 2));
       penalty = -4*pow(bSampleB - 0.5, 2);
-      //screenScanner.penaltyVec = PVector.mult(screenScanner.vec, penalty*0.5);
       screenScanner.stepSize = 40.0*pow(bSampleA - bSampleB, 2.0) - 50.0 * penalty;
-      //float corr = - 4*pow(bSampleA - 0.5, 2);
-      //screenScanner.stepSize = exp(pow(bSampleA - 0.5, 2)) - exp(pow(bSampleA - 0.5, 2));
     }
     
     // Control parameters with scanner
@@ -323,5 +319,9 @@ void keyPressed(){
   if(key == 'E' || key == 'e'){
     // Flip parameter C modulation
     modC = (modC == 0) ? 255 : 0;
+  }
+  if(key == 'S' || key == 's'){
+    // Screenshot
+    saveFrame("screenshot.tiff");
   }
 }
