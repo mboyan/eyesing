@@ -1,8 +1,9 @@
 import ddf.minim.*;
 import ddf.minim.analysis.*;
+import processing.video.*;
 
-PShader shader, noiseShader;
-PGraphics spinGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC;
+PShader shader, noiseShader, glyphShaderTexCtrl, glyphShaderOverlay;
+PGraphics spinGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC, glyphGraphicsTexCtrl, glyphGraphicsOverlay;
 
 float[] hist;
 
@@ -12,7 +13,7 @@ boolean scanToggle, scannerCtrl, scannerAdapt;
 float bSampleA, bSampleB;
 
 // Texture parameter control
-boolean textureParamCtrl;
+boolean lineTextureParamCtrl;
 float sweepSpeedA, sweepSpeedB, sweepSpeedC;
 float sweepLineWA, sweepLineWB, sweepLineWC;
 float lineXA, lineXB, lineXC;
@@ -27,12 +28,22 @@ AudioPlayer in;
 boolean audioReact;
 float[] bands;
 int bandShiftIdx;
-float[] lvlThresh = {2.0, 0.5, 0.25, 0.125};
+float[] lvlThresh = {2.0, 0.5, 0.25, 0.125}; // Calibrate before show???
+
+// WPF glyph controls
+boolean glyphOverlay;
+float glyphSeedA, glyphSeedB;
+float glyphRepeatX, glyphRepeatY;
+int glyphTextureCtrlIdx; // 0 for none, 1 for beta, 2 for field, 3 for interact
+
+// Video reading
+Movie video;
+boolean videoTextureParamControl;
 
 void setup(){
   
   // Initialize minim and track
-  audioReact = false;//true;
+  audioReact = true;
   minim = new Minim(this);
   in = minim.loadFile("sample_live_coding_jam.wav", 1024); // change to mic input when needed
   fft = new FFT(in.bufferSize(), in.sampleRate());
@@ -44,6 +55,8 @@ void setup(){
   paramGraphicsA = createGraphics(width, height, P2D);
   paramGraphicsB = createGraphics(width, height, P2D);
   paramGraphicsC = createGraphics(width, height, P2D);
+  glyphGraphicsTexCtrl = createGraphics(width, height, P2D);
+  glyphGraphicsOverlay = createGraphics(width, height, P2D);
   
   noiseShader = loadShader("noise_shader.glsl");
   noiseShader.set("iResolution", float(width), float(height), 0.0);
@@ -84,10 +97,10 @@ void setup(){
   scannerAdapt = true;
   
   // Toggle texture parameter control
-  textureParamCtrl = true;
-  sweepSpeedA = 5;
-  sweepSpeedB = 1;
-  sweepSpeedC = 10;
+  lineTextureParamCtrl = true;
+  sweepSpeedA = -5;
+  sweepSpeedB = -1;
+  sweepSpeedC = -10;
   sweepLineWA = 100;
   sweepLineWB = 200;
   sweepLineWC = 50;
@@ -107,6 +120,23 @@ void setup(){
   paramGraphicsC.beginDraw();
   paramGraphicsC.background(127);
   paramGraphicsC.endDraw();
+  
+  // Load glyph shader
+  glyphOverlay = false;
+  glyphShaderTexCtrl = loadShader("glyph_shader.glsl");
+  glyphShaderOverlay = loadShader("glyph_shader.glsl");
+  glyphRepeatX = 1; //16
+  glyphRepeatY = 1; //9
+  glyphShaderTexCtrl.set("iResolution", float(width), float(height), 0.0);
+  glyphShaderTexCtrl.set("iContrast", 0.5);
+  glyphShaderOverlay.set("iResolution", float(width), float(height), 0.0);
+  glyphShaderOverlay.set("iContrast", 1.0);
+  glyphTextureCtrlIdx = 2;
+  
+  // Video input
+  videoTextureParamControl = false;
+  video = new Movie(this, "VCLP0150.avi");
+  video.loop();
 }
 
 
@@ -149,14 +179,16 @@ void draw(){
   }
   
   // ===========================
+  // PATTERN PRE-PROCESSING
+  // ===========================
   
   // Draw parameter graphics
-  if(textureParamCtrl){
+  if(lineTextureParamCtrl){
     paramGraphicsA.beginDraw();
     paramGraphicsA.background(127);
     paramGraphicsA.stroke(modA);
     paramGraphicsA.strokeWeight(sweepLineWA);
-    lineXA = (frameCount*sweepSpeedA)%(width + sweepLineWA) - 0.5*sweepLineWA;
+    lineXA = (width + (frameCount*sweepSpeedA)%(width + sweepLineWA))%width - 0.5*sweepLineWA;
     paramGraphicsA.line(lineXA, 0, lineXA, height);
     paramGraphicsA.endDraw();
     
@@ -164,7 +196,7 @@ void draw(){
     paramGraphicsB.background(127);
     paramGraphicsB.stroke(modB);
     paramGraphicsB.strokeWeight(sweepLineWB);
-    lineXB = (frameCount*sweepSpeedB)%(width + sweepLineWB) - 0.5*sweepLineWB;
+    lineXB = (width + (frameCount*sweepSpeedB)%(width + sweepLineWB))%width - 0.5*sweepLineWB;
     paramGraphicsB.line(lineXB, 0, lineXB, height);
     paramGraphicsB.endDraw();
     
@@ -172,7 +204,7 @@ void draw(){
     paramGraphicsC.background(127);
     paramGraphicsC.stroke(modC);
     paramGraphicsC.strokeWeight(sweepLineWC);
-    lineXC = (frameCount*sweepSpeedC)%(width + sweepLineWC) - 0.5*sweepLineWC;
+    lineXC = (width + (frameCount*sweepSpeedC)%(width + sweepLineWC))%width - 0.5*sweepLineWC;
     paramGraphicsC.line(lineXC, 0, lineXC, height);
     paramGraphicsC.endDraw();
   }
@@ -202,9 +234,53 @@ void draw(){
   
   // Pass acceptance test noise
   shader.set("noiseTexture2", noiseGraphics);
-  shader.set("paramTextureBeta", paramGraphicsA);
-  shader.set("paramTextureField", paramGraphicsB);
-  shader.set("paramTextureInteract", paramGraphicsC);
+  
+  // Compute glyph texture
+  if (glyphTextureCtrlIdx > 0 || glyphOverlay){
+    noiseSeed(13);
+    glyphSeedA = 2.0*noise(frameCount*0.008);
+    noiseSeed(24);
+    glyphSeedB = 2.0*noise(frameCount*0.008);
+    
+    glyphShaderTexCtrl.set("iSeedA", glyphSeedA);
+    glyphShaderTexCtrl.set("iSeedB", glyphSeedB);
+    glyphShaderTexCtrl.set("iRepeat", glyphRepeatX, glyphRepeatY);
+    glyphShaderOverlay.set("iSeedA", glyphSeedA);
+    glyphShaderOverlay.set("iSeedB", glyphSeedB);
+    glyphShaderOverlay.set("iRepeat", glyphRepeatX, glyphRepeatY);
+    
+    glyphGraphicsTexCtrl.beginDraw();
+    glyphGraphicsTexCtrl.shader(glyphShaderTexCtrl);
+    glyphGraphicsTexCtrl.fill(0);
+    glyphGraphicsTexCtrl.rect(0, 0, width, height);
+    glyphGraphicsTexCtrl.endDraw();
+  }
+  
+  // Pass parameter textures
+  if (videoTextureParamControl && video.available() == true){
+    video.read();
+    video.filter(INVERT);
+    shader.set("paramTextureBeta", video);
+    //shader.set("paramTextureBeta", glyphGraphics);
+    shader.set("paramTextureField", video);
+    shader.set("paramTextureInteract", video);
+  } else {
+    if (glyphTextureCtrlIdx == 1){
+      shader.set("paramTextureBeta", glyphGraphicsTexCtrl);
+    } else {
+      shader.set("paramTextureBeta", paramGraphicsA);
+    }
+    if (glyphTextureCtrlIdx == 2){
+      shader.set("paramTextureField", glyphGraphicsTexCtrl);
+    } else {
+      shader.set("paramTextureField", paramGraphicsB);
+    }
+    if (glyphTextureCtrlIdx == 3){
+      shader.set("paramTextureInteract", glyphGraphicsTexCtrl);
+    } else {
+      shader.set("paramTextureInteract", paramGraphicsC);
+    }
+  }
   //shader.set("spinTexture", spinGraphics);
   
   // Update processing shader
@@ -214,6 +290,10 @@ void draw(){
   ////image(noiseGraphics, 0, 0);
   //fill(0);
   //rect(0, 0, width, height);
+  
+  // ===========================
+  // MAIN PATTERN
+  // ===========================
   
   // Draw spins
   spinGraphics.beginDraw();
@@ -246,6 +326,28 @@ void draw(){
   //  saveFrame();
   //}
   
+  // ===========================
+  // PATTERN OVERLAY
+  // ===========================
+  
+  // Glyph overlay
+  if (glyphOverlay){
+    glyphGraphicsOverlay.beginDraw();
+    glyphGraphicsOverlay.shader(glyphShaderOverlay);
+    glyphGraphicsOverlay.fill(0);
+    glyphGraphicsOverlay.rect(0, 0, width, height);
+    glyphGraphicsOverlay.endDraw();
+    blendMode(MULTIPLY);
+    image(glyphGraphicsOverlay, 0, 0);
+    blendMode(BLEND);
+  }
+  
+  //rectMode(CORNER);
+  //shader(glyphShader);
+  //fill(0);
+  //rect(0, 0, width, height);
+  
+  // Crosshair
   if(scanToggle){
     
     bSampleA = screenScanner.scan();
@@ -323,5 +425,47 @@ void keyPressed(){
   if(key == 'S' || key == 's'){
     // Screenshot
     saveFrame("screenshot.tiff");
+  }
+  // Glyph repeats
+  //if(key == '0'){
+  //  glyphRepeatX = 1;
+  //  glyphRepeatY = 1;
+  //}
+  //if(key == '1'){
+  //  glyphRepeatX = 8;
+  //  glyphRepeatY = 5;
+  //}
+  //if(key == '2'){
+  //  glyphRepeatX = 16;
+  //  glyphRepeatY = 10;
+  //}
+  //if(key == '3'){
+  //  glyphRepeatX = 24;
+  //  glyphRepeatY = 15;
+  //}
+  //if(key == '4'){
+  //  glyphRepeatX = 32;
+  //  glyphRepeatY = 20;
+  //}
+  //if(key == '5'){
+  //  glyphRepeatX = 40;
+  //  glyphRepeatY = 25;
+  //}
+  // FOR PROJECTOR RESOLUTION
+  if(key == '0'){
+    glyphRepeatX = 1;
+    glyphRepeatY = 1;
+  }
+  if(key == '1'){
+    glyphRepeatX = 16;
+    glyphRepeatY = 9;
+  }
+  if(key == '2'){
+    glyphRepeatX = 32;
+    glyphRepeatY = 18;
+  }
+  if(key == '3'){
+    glyphRepeatX = 64;
+    glyphRepeatY = 32;
   }
 }
