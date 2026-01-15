@@ -20,6 +20,9 @@ uniform vec4      iDate;                 // (year, month, day, time in seconds)
 
 #define PI 3.14159265358979323846
 
+uniform sampler2D hardThreshTexture;
+uniform vec2 probModEdges;
+
 float rand(vec2 st) {
     st = fract(st * 0.3183099);  // Scale to make the randomness denser
     st += dot(st, st + 33.333);   // More mixing
@@ -38,7 +41,6 @@ uvec3 pcg3d(uvec3 v) {
     return v;
 }
 
-
 void main(){
 
     vec2 st = gl_FragCoord.xy/iResolution.xy;
@@ -46,6 +48,11 @@ void main(){
     uvec3 rndVal = pcg3d(uvec3(st*iResolution.xy, iTime));
     float rndValUnit = float(rndVal.x ^ rndVal.y ^ rndVal.z) / 4294967295.0;
     vec3 color = vec3(rndValUnit);
+
+    // Spatial modulation
+    float textureMod = step(0.5, texture2D(hardThreshTexture, st).x);
+    float probMod = smoothstep(probModEdges.x, probModEdges.y, distance(st, vec2(0.5)));
+    color = mix(color, step(probMod, color), textureMod);
 
 	gl_FragColor = vec4(color, 1.);
 }

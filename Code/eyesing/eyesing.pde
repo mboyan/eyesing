@@ -3,9 +3,9 @@ import ddf.minim.analysis.*;
 import processing.video.*;
 
 PShader shader, noiseShader, glyphShaderTexCtrl, glyphShaderOverlay;
-PGraphics spinGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC, glyphGraphicsTexCtrl, glyphGraphicsOverlay;
+PGraphics spinGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC, glyphGraphicsTexCtrl, glyphGraphicsOverlay, noiseModGraphics;
 
-float[] hist;
+//float[] hist;
 
 // Scanner variables
 ScreenScanner screenScanner;
@@ -14,10 +14,10 @@ float bSampleA, bSampleB;
 
 // Texture parameter control
 boolean lineTextureParamCtrl;
-float sweepSpeedA, sweepSpeedB, sweepSpeedC;
-float sweepLineWA, sweepLineWB, sweepLineWC;
-float lineXA, lineXB, lineXC;
-float modA, modB, modC;
+float sweepSpeedA, sweepSpeedB, sweepSpeedC, sweepSpeedD;
+float sweepLineWA, sweepLineWB, sweepLineWC, sweepLineWD;
+float lineXA, lineXB, lineXC, lineXD;
+float modA, modB, modC, modD;
 
 float penalty;
 
@@ -25,31 +25,35 @@ float penalty;
 Minim minim;
 FFT fft;
 AudioPlayer in;
-boolean audioReact;
+boolean audioReact = false;
 float[] bands;
 int bandShiftIdx;
 float[] lvlThresh = {2.0, 0.5, 0.25, 0.125}; // Calibrate before show???
 
 // WPF glyph controls
-boolean glyphOverlay;
+boolean glyphOverlay = false;
 float glyphSeedA, glyphSeedB;
 float glyphRepeatX, glyphRepeatY;
 int glyphTextureCtrlIdx; // 0 for none, 1 for beta, 2 for field, 3 for interact
 
 // Video reading
 Movie video;
-boolean videoTextureParamControl;
+boolean videoTextureParamControl = true;
+
+// Noise visualisation
+boolean viewNoise = true;
+float probModEdge1, probModEdge2;
 
 void setup(){
   
   // Initialize minim and track
-  audioReact = true;
   minim = new Minim(this);
   in = minim.loadFile("sample_live_coding_jam.wav", 1024); // change to mic input when needed
   fft = new FFT(in.bufferSize(), in.sampleRate());
   bands = new float[4];
   bandShiftIdx = 0;
   
+  // PGraphics objects
   spinGraphics = createGraphics(width, height, P2D);
   noiseGraphics = createGraphics(width, height, P2D);
   paramGraphicsA = createGraphics(width, height, P2D);
@@ -57,12 +61,14 @@ void setup(){
   paramGraphicsC = createGraphics(width, height, P2D);
   glyphGraphicsTexCtrl = createGraphics(width, height, P2D);
   glyphGraphicsOverlay = createGraphics(width, height, P2D);
+  noiseModGraphics = createGraphics(width, height, P2D);
   
+  // Initialize noise shader
   noiseShader = loadShader("noise_shader.glsl");
   noiseShader.set("iResolution", float(width), float(height), 0.0);
   noiseShader.set("iTime", 0.0);
   
-  // Define shader and pass initial parameters
+  // Initialize spin shader
   shader = loadShader("eyesing_shader.glsl");
   shader.set("iResolution", float(width), float(height), 0.0);
   shader.set("beta", 0.5);
@@ -83,10 +89,10 @@ void setup(){
   // Pass initial spin state
   shader.set("spinTexture", noiseGraphics);
   
-  hist = new float[width];
-  for (int i = 0; i < hist.length; i++){
-    hist[i] = 0;
-  }
+  //hist = new float[width];
+  //for (int i = 0; i < hist.length; i++){
+  //  hist[i] = 0;
+  //}
   
   //frameRate(1);
   
@@ -101,12 +107,15 @@ void setup(){
   sweepSpeedA = -5;
   sweepSpeedB = -1;
   sweepSpeedC = -10;
+  sweepSpeedD = 5;
   sweepLineWA = 100;
   sweepLineWB = 200;
   sweepLineWC = 50;
+  sweepLineWD = 500;
   modA = 0;
   modB = 0;
   modC = 0;
+  modD = 0;
   
   // Draw default parameter graphics
   paramGraphicsA.beginDraw();
@@ -121,8 +130,7 @@ void setup(){
   paramGraphicsC.background(127);
   paramGraphicsC.endDraw();
   
-  // Load glyph shader
-  glyphOverlay = false;
+  // Initialize glyph shader
   glyphShaderTexCtrl = loadShader("glyph_shader.glsl");
   glyphShaderOverlay = loadShader("glyph_shader.glsl");
   glyphRepeatX = 1; //16
@@ -134,9 +142,16 @@ void setup(){
   glyphTextureCtrlIdx = 2;
   
   // Video input
-  videoTextureParamControl = false;
-  video = new Movie(this, "VCLP0150.avi");
+  //video = new Movie(this, "VCLP0150.avi");
+  //video = new Movie(this, "DSC_1789.mp4");
+  video = new Movie(this, "grubbly.mp4");
+  //video = new Movie(this, "IMG_0138.mov");
+  //video = new Movie(this, "GlitchmanWalking.mp4");
   video.loop();
+  
+  // Noise probability modulation
+  probModEdge1 = 0.25;
+  probModEdge2 = sqrt(2);
 }
 
 
@@ -209,8 +224,19 @@ void draw(){
     paramGraphicsC.endDraw();
   }
   
+  // Draw noise modulation graphics
+  noiseModGraphics.beginDraw();
+  noiseModGraphics.background(modD);
+  noiseModGraphics.stroke(255 - modD);
+  noiseModGraphics.strokeWeight(sweepLineWD);
+  lineXD = (width + (frameCount*sweepSpeedD)%(width + sweepLineWD))%width - 0.5*sweepLineWD;
+  noiseModGraphics.line(lineXD, 0, lineXD, height);
+  noiseModGraphics.endDraw();
+  
   // Update noise shader
   noiseShader.set("iTime", float(frameCount));
+  noiseShader.set("hardThreshTexture", noiseModGraphics);
+  noiseShader.set("probModEdges", probModEdge1, probModEdge2);
   
   // Draw noise for selection probs
   noiseGraphics.beginDraw();
@@ -261,7 +287,6 @@ void draw(){
     video.read();
     video.filter(INVERT);
     shader.set("paramTextureBeta", video);
-    //shader.set("paramTextureBeta", glyphGraphics);
     shader.set("paramTextureField", video);
     shader.set("paramTextureInteract", video);
   } else {
@@ -296,12 +321,16 @@ void draw(){
   // ===========================
   
   // Draw spins
-  spinGraphics.beginDraw();
-  spinGraphics.shader(shader);
-  spinGraphics.fill(0);
-  spinGraphics.rect(0, 0, width, height);
-  spinGraphics.endDraw();
-  image(spinGraphics, 0, 0);
+  if (viewNoise){
+    image(noiseGraphics, 0, 0);
+  } else {
+    spinGraphics.beginDraw();
+    spinGraphics.shader(shader);
+    spinGraphics.fill(0);
+    spinGraphics.rect(0, 0, width, height);
+    spinGraphics.endDraw();
+    image(spinGraphics, 0, 0);
+  }
   
   // Feed spin image back to shader
   shader.set("spinTexture", spinGraphics);
@@ -421,6 +450,10 @@ void keyPressed(){
   if(key == 'E' || key == 'e'){
     // Flip parameter C modulation
     modC = (modC == 0) ? 255 : 0;
+  }
+  if(key == 'R' || key == 'r'){
+    // Flip noise probability modulation
+    modD = (modD == 0) ? 255 : 0;
   }
   if(key == 'S' || key == 's'){
     // Screenshot

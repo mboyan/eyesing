@@ -40,9 +40,9 @@ void main(){
 	vec2 st = gl_FragCoord.xy/iResolution.xy;
 
 	// Modulate with textures
-	float betaMod = max(0.0, beta + exp(texture2D(paramTextureBeta, st).x*20. - 10.));
-    float fieldMod = field + texture2D(paramTextureField, st).x*2. - 1.;
-    float interactMod = interact + texture2D(paramTextureInteract, st).x*2. - 1.;
+	float betaMod = max(0.0, beta + exp(texture2D(paramTextureBeta, 1. - st).x*20. - 10.));
+    float fieldMod = field + texture2D(paramTextureField, 1. - st).x*2. - 1.;
+    float interactMod = interact + texture2D(paramTextureInteract, 1. - st).x*2. - 1.;
 
 	// Read spin texture
 	float tex = step(0.5, texture2D(spinTexture, st).x);
