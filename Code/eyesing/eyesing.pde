@@ -13,7 +13,7 @@ boolean scanToggle, scannerCtrl, scannerAdapt;
 float bSampleA, bSampleB;
 
 // Texture parameter control
-boolean lineTextureParamCtrl;
+boolean lineTextureParamCtrl = true;
 float sweepSpeedA, sweepSpeedB, sweepSpeedC, sweepSpeedD;
 float sweepLineWA, sweepLineWB, sweepLineWC, sweepLineWD;
 float lineXA, lineXB, lineXC, lineXD;
@@ -31,17 +31,17 @@ int bandShiftIdx;
 float[] lvlThresh = {2.0, 0.5, 0.25, 0.125}; // Calibrate before show???
 
 // WPF glyph controls
-boolean glyphOverlay = false;
+boolean glyphOverlay = true;
 float glyphSeedA, glyphSeedB;
 float glyphRepeatX, glyphRepeatY;
-int glyphTextureCtrlIdx; // 0 for none, 1 for beta, 2 for field, 3 for interact
+int glyphTextureCtrlIdx = 0; // 0 for none, 1 for beta, 2 for field, 3 for interact
 
 // Video reading
 Movie video;
 boolean videoTextureParamControl = true;
 
 // Noise visualisation
-boolean viewNoise = true;
+boolean viewNoise = false;
 float probModEdge1, probModEdge2;
 
 void setup(){
@@ -76,7 +76,7 @@ void setup(){
   shader.set("interact", 0.25);
   shader.set("selDensity", exp(-0.1));
   
-  //size(500, 500, P2D);
+  //size(540, 540, P2D);
   fullScreen(P2D);
   
   // Compute initial noise
@@ -102,8 +102,7 @@ void setup(){
   scannerCtrl = true;
   scannerAdapt = true;
   
-  // Toggle texture parameter control
-  lineTextureParamCtrl = true;
+  // Line patterns for parameter control
   sweepSpeedA = -5;
   sweepSpeedB = -1;
   sweepSpeedC = -10;
@@ -111,7 +110,7 @@ void setup(){
   sweepLineWA = 100;
   sweepLineWB = 200;
   sweepLineWC = 50;
-  sweepLineWD = 500;
+  sweepLineWD = 0;
   modA = 0;
   modB = 0;
   modC = 0;
@@ -139,18 +138,17 @@ void setup(){
   glyphShaderTexCtrl.set("iContrast", 0.5);
   glyphShaderOverlay.set("iResolution", float(width), float(height), 0.0);
   glyphShaderOverlay.set("iContrast", 1.0);
-  glyphTextureCtrlIdx = 2;
   
   // Video input
   //video = new Movie(this, "VCLP0150.avi");
   //video = new Movie(this, "DSC_1789.mp4");
-  video = new Movie(this, "grubbly.mp4");
+  //video = new Movie(this, "grubbly.mp4");
   //video = new Movie(this, "IMG_0138.mov");
-  //video = new Movie(this, "GlitchmanWalking.mp4");
+  video = new Movie(this, "GlitchmanWalking.mp4");
   video.loop();
   
   // Noise probability modulation
-  probModEdge1 = 0.25;
+  probModEdge1 = 0.05;
   probModEdge2 = sqrt(2);
 }
 
@@ -198,7 +196,7 @@ void draw(){
   // ===========================
   
   // Draw parameter graphics
-  if(lineTextureParamCtrl){
+  if(lineTextureParamCtrl && !viewNoise){
     paramGraphicsA.beginDraw();
     paramGraphicsA.background(127);
     paramGraphicsA.stroke(modA);
@@ -226,11 +224,15 @@ void draw(){
   
   // Draw noise modulation graphics
   noiseModGraphics.beginDraw();
-  noiseModGraphics.background(modD);
-  noiseModGraphics.stroke(255 - modD);
-  noiseModGraphics.strokeWeight(sweepLineWD);
-  lineXD = (width + (frameCount*sweepSpeedD)%(width + sweepLineWD))%width - 0.5*sweepLineWD;
-  noiseModGraphics.line(lineXD, 0, lineXD, height);
+  if(sweepLineWD < width){
+    noiseModGraphics.background(modD);
+    noiseModGraphics.stroke(255 - modD);
+    noiseModGraphics.strokeWeight(sweepLineWD);
+    lineXD = (width + (frameCount*sweepSpeedD)%(width + sweepLineWD))%width - 0.5*sweepLineWD;
+    noiseModGraphics.line(lineXD, 0, lineXD, height);
+  } else {
+    noiseModGraphics.background(255 - modD);
+  }
   noiseModGraphics.endDraw();
   
   // Update noise shader
@@ -283,27 +285,29 @@ void draw(){
   }
   
   // Pass parameter textures
-  if (videoTextureParamControl && video.available() == true){
-    video.read();
-    video.filter(INVERT);
-    shader.set("paramTextureBeta", video);
-    shader.set("paramTextureField", video);
-    shader.set("paramTextureInteract", video);
-  } else {
-    if (glyphTextureCtrlIdx == 1){
-      shader.set("paramTextureBeta", glyphGraphicsTexCtrl);
+  if (!viewNoise) {
+    if (videoTextureParamControl && video.available() == true){
+      video.read();
+      video.filter(INVERT);
+      shader.set("paramTextureBeta", video);
+      shader.set("paramTextureField", video);
+      shader.set("paramTextureInteract", video);
     } else {
-      shader.set("paramTextureBeta", paramGraphicsA);
-    }
-    if (glyphTextureCtrlIdx == 2){
-      shader.set("paramTextureField", glyphGraphicsTexCtrl);
-    } else {
-      shader.set("paramTextureField", paramGraphicsB);
-    }
-    if (glyphTextureCtrlIdx == 3){
-      shader.set("paramTextureInteract", glyphGraphicsTexCtrl);
-    } else {
-      shader.set("paramTextureInteract", paramGraphicsC);
+      if (glyphTextureCtrlIdx == 1){
+        shader.set("paramTextureBeta", glyphGraphicsTexCtrl);
+      } else {
+        shader.set("paramTextureBeta", paramGraphicsA);
+      }
+      if (glyphTextureCtrlIdx == 2){
+        shader.set("paramTextureField", glyphGraphicsTexCtrl);
+      } else {
+        shader.set("paramTextureField", paramGraphicsB);
+      }
+      if (glyphTextureCtrlIdx == 3){
+        shader.set("paramTextureInteract", glyphGraphicsTexCtrl);
+      } else {
+        shader.set("paramTextureInteract", paramGraphicsC);
+      }
     }
   }
   //shader.set("spinTexture", spinGraphics);
@@ -425,6 +429,8 @@ void draw(){
       shader.set("interact", map(screenScanner.pos.z, 0, width, -0.1, 1.0));
     }
   }
+  
+  //saveFrame();
 }
 
 void mouseDragged(){

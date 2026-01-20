@@ -61,7 +61,12 @@ void main()
 {
 	vec2 st = gl_FragCoord.xy/iResolution.xy;
 
+	// Make square if iRepeat = 1
+	st = mix(st * vec2(iResolution.x/iResolution.y, 1.) - vec2(iResolution.x/iResolution.y * (0.5 - 0.5*iResolution.y/iResolution.x), 0.), st, step(1.5, iRepeat));
+
 	vec3 color = vec3(pattern(st, iRepeat) * iContrast + (1. - iContrast));
+
+	color = mix(color * (step(0., st.x) - step(1., st.x)), color, step(1.5, iRepeat).xxx);
 
 	gl_FragColor = vec4(color, 1.);
 }

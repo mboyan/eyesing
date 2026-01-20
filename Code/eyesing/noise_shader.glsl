@@ -51,7 +51,7 @@ void main(){
 
     // Spatial modulation
     float textureMod = step(0.5, texture2D(hardThreshTexture, st).x);
-    float probMod = smoothstep(probModEdges.x, probModEdges.y, distance(st, vec2(0.5)));
+    float probMod = 0.5 + smoothstep(probModEdges.x, probModEdges.y, distance(st * vec2(iResolution.x/iResolution.y, 1.) - vec2(0.3, 0.), vec2(0.5)));
     color = mix(color, step(probMod, color), textureMod);
 
 	gl_FragColor = vec4(color, 1.);

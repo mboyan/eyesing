@@ -8,6 +8,7 @@ class ScreenScanner{
   float orientX, orientY, orientZ;
   PImage scanSegment;
   float avgBrightness;
+  boolean showLargeFrame;
   
   ScreenScanner(float x, float y, float z, float size){
     pos = new PVector(x, y, z);
@@ -22,6 +23,7 @@ class ScreenScanner{
     orientZ = 1.0;
     
     //penaltyVec = new PVector(0.0, 0.0);
+    showLargeFrame = true;
   }
   
   void updatePos(){
@@ -37,8 +39,6 @@ class ScreenScanner{
     //vec.add(penaltyVec);
     vec.normalize();
     vec.mult(stepSize);
-    
-    
     
     // Perturb
     pos.add(vec);
@@ -73,6 +73,10 @@ class ScreenScanner{
     noFill();
     rectMode(CENTER);
     rect(pos.x, pos.y, winSize, winSize);
+    
+    if (showLargeFrame){
+      rect(0.5*width, 0.5*height, height - 50, height - 50);
+    }
   }
   
   float scan(){
