@@ -23,7 +23,7 @@ class ScreenScanner{
     orientZ = 1.0;
     
     //penaltyVec = new PVector(0.0, 0.0);
-    showLargeFrame = true;
+    showLargeFrame = false;
   }
   
   void updatePos(){

@@ -77,7 +77,8 @@ void setup(){
   shader.set("selDensity", exp(-0.1));
   
   //size(540, 540, P2D);
-  fullScreen(P2D);
+  size(1080, 360, P2D);
+  //fullScreen(P2D);
   
   // Compute initial noise
   noiseGraphics.beginDraw();
@@ -132,7 +133,7 @@ void setup(){
   // Initialize glyph shader
   glyphShaderTexCtrl = loadShader("glyph_shader.glsl");
   glyphShaderOverlay = loadShader("glyph_shader.glsl");
-  glyphRepeatX = 1; //16
+  glyphRepeatX = 3; //16
   glyphRepeatY = 1; //9
   glyphShaderTexCtrl.set("iResolution", float(width), float(height), 0.0);
   glyphShaderTexCtrl.set("iContrast", 0.5);
@@ -143,8 +144,8 @@ void setup(){
   //video = new Movie(this, "VCLP0150.avi");
   //video = new Movie(this, "DSC_1789.mp4");
   //video = new Movie(this, "grubbly.mp4");
-  //video = new Movie(this, "IMG_0138.mov");
-  video = new Movie(this, "GlitchmanWalking.mp4");
+  video = new Movie(this, "IMG_0138.mov");
+  //video = new Movie(this, "GlitchmanWalking.mp4");
   video.loop();
   
   // Noise probability modulation
@@ -430,7 +431,7 @@ void draw(){
     }
   }
   
-  //saveFrame();
+  saveFrame();
 }
 
 void mouseDragged(){
