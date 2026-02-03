@@ -1,0 +1,40 @@
+===SCANNER CONTROLS===
+scanToggle - bool
+scannerCtrl - bool
+scannerAdapt - bool
+
+===LINE TEXTURE CONTROLS===
+lineTextureParamCtrl - bool
+sweepSpeedA - float
+sweepSpeedB - float
+sweepSpeedC - float
+sweepSpeedD - float
+sweepLineWA - float
+sweepLineWB - float
+sweepLineWC - float
+sweepLineWD - float
+modA - bool
+modB - bool
+modC - bool
+modD - bool
+
+===AUDIO REACTIVITY===
+audioReact - bool
+lvlThreshA - float ?
+lvlThreshB - float ?
+lvlThreshC - float ?
+lvlThreshD - float ?
+
+===GLYPH CONTROLS===
+glyphOverlay - bool
+glyphRepeatX/glyphRepeatY - int
+glyphTextureCtrlIdx - int
+
+===VIDEO CONTROLS===
+videoTextureParamControl - bool
+videoIdx - int ?
+
+===NOISE VISUALISATION===
+viewNoise - bool
+probModEdge1 - float
+probModEdge2 - float

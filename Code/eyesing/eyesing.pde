@@ -1,6 +1,8 @@
 import ddf.minim.*;
 import ddf.minim.analysis.*;
 import processing.video.*;
+import themidibus.*;
+import javax.sound.midi.MidiMessage;
 
 PShader shader, noiseShader, glyphShaderTexCtrl, glyphShaderOverlay;
 PGraphics spinGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC, glyphGraphicsTexCtrl, glyphGraphicsOverlay, noiseModGraphics;
@@ -45,7 +47,19 @@ boolean videoTextureParamControl = false;
 boolean viewNoise = false;
 float probModEdge1, probModEdge2;
 
+// MIDI
+MidiBus f1Bus, x1Bus;
+
 void setup(){
+  
+  // Initialize MIDI
+  MidiBus.list(); // List all available Midi devices on STDOUT. This will show each device's index and name.
+  f1Bus = new MidiBus();
+  f1Bus.registerParent(this);
+  f1Bus.addInput(1);
+  x1Bus = new MidiBus();
+  x1Bus.registerParent(this);
+  x1Bus.addInput(2);
   
   // Initialize minim and track
   //minim = new Minim(this);
@@ -77,11 +91,12 @@ void setup(){
   shader.set("interact", 0.25);
   shader.set("selDensity", exp(-0.1));
   
-  //size(540, 540, P2D);
+  size(540, 540, P2D);
   //size(1080, 1350, P2D);
   //size(540, 810, P2D);
   //size(1080, 360, P2D);
-  fullScreen(P2D, 2);
+  //fullScreen(P2D, 2);
+  //fullScreen(P2D);
   
   // Compute initial noise
   noiseGraphics.beginDraw();
@@ -200,28 +215,41 @@ void draw(){
   
   // Draw parameter graphics
   if(lineTextureParamCtrl && !viewNoise){
+    
     paramGraphicsA.beginDraw();
-    paramGraphicsA.background(127);
-    paramGraphicsA.stroke(modA);
-    paramGraphicsA.strokeWeight(sweepLineWA);
-    lineXA = (width + (frameCount*sweepSpeedA)%(width + sweepLineWA))%width - 0.5*sweepLineWA;
-    paramGraphicsA.line(lineXA, 0, lineXA, height);
+    if(sweepLineWA < width){
+      paramGraphicsA.background(127);
+      paramGraphicsA.stroke(modA);
+      paramGraphicsA.strokeWeight(sweepLineWA);
+      lineXA = (width + (frameCount*sweepSpeedA)%(width + sweepLineWA))%width - 0.5*sweepLineWA;
+      paramGraphicsA.line(lineXA, 0, lineXA, height);
+    } else {
+      paramGraphicsA.background(modA);
+    }
     paramGraphicsA.endDraw();
     
     paramGraphicsB.beginDraw();
-    paramGraphicsB.background(127);
-    paramGraphicsB.stroke(modB);
-    paramGraphicsB.strokeWeight(sweepLineWB);
-    lineXB = (width + (frameCount*sweepSpeedB)%(width + sweepLineWB))%width - 0.5*sweepLineWB;
-    paramGraphicsB.line(lineXB, 0, lineXB, height);
+    if(sweepLineWB < width){
+      paramGraphicsB.background(127);
+      paramGraphicsB.stroke(modB);
+      paramGraphicsB.strokeWeight(sweepLineWB);
+      lineXB = (width + (frameCount*sweepSpeedB)%(width + sweepLineWB))%width - 0.5*sweepLineWB;
+      paramGraphicsB.line(lineXB, 0, lineXB, height);
+    } else {
+      paramGraphicsB.background(modB);
+    }
     paramGraphicsB.endDraw();
     
     paramGraphicsC.beginDraw();
-    paramGraphicsC.background(127);
-    paramGraphicsC.stroke(modC);
-    paramGraphicsC.strokeWeight(sweepLineWC);
-    lineXC = (width + (frameCount*sweepSpeedC)%(width + sweepLineWC))%width - 0.5*sweepLineWC;
-    paramGraphicsC.line(lineXC, 0, lineXC, height);
+    if(sweepLineWC < width){
+      paramGraphicsC.background(127);
+      paramGraphicsC.stroke(modC);
+      paramGraphicsC.strokeWeight(sweepLineWC);
+      lineXC = (width + (frameCount*sweepSpeedC)%(width + sweepLineWC))%width - 0.5*sweepLineWC;
+      paramGraphicsC.line(lineXC, 0, lineXC, height);
+    } else {
+      paramGraphicsC.background(modC);
+    }
     paramGraphicsC.endDraw();
   }
   
