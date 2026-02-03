@@ -33,12 +33,13 @@ float[] lvlThresh = {2.0, 0.5, 0.25, 0.125}; // Calibrate before show???
 // WPF glyph controls
 boolean glyphOverlay = true;
 float glyphSeedA, glyphSeedB;
-float glyphRepeatX, glyphRepeatY;
+float glyphRepeatX = 1;
+float glyphRepeatY = 1;
 int glyphTextureCtrlIdx = 0; // 0 for none, 1 for beta, 2 for field, 3 for interact
 
 // Video reading
 Movie video;
-boolean videoTextureParamControl = true;
+boolean videoTextureParamControl = false;
 
 // Noise visualisation
 boolean viewNoise = false;
@@ -47,11 +48,11 @@ float probModEdge1, probModEdge2;
 void setup(){
   
   // Initialize minim and track
-  minim = new Minim(this);
-  in = minim.loadFile("sample_live_coding_jam.wav", 1024); // change to mic input when needed
-  fft = new FFT(in.bufferSize(), in.sampleRate());
-  bands = new float[4];
-  bandShiftIdx = 0;
+  //minim = new Minim(this);
+  //in = minim.loadFile("sample_live_coding_jam.wav", 1024); // change to mic input when needed
+  //fft = new FFT(in.bufferSize(), in.sampleRate());
+  //bands = new float[4];
+  //bandShiftIdx = 0;
   
   // PGraphics objects
   spinGraphics = createGraphics(width, height, P2D);
@@ -76,8 +77,10 @@ void setup(){
   shader.set("interact", 0.25);
   shader.set("selDensity", exp(-0.1));
   
-  //size(540, 540, P2D);
-  size(1080, 360, P2D);
+  size(540, 540, P2D);
+  //size(1080, 1350, P2D);
+  //size(540, 810, P2D);
+  //size(1080, 360, P2D);
   //fullScreen(P2D);
   
   // Compute initial noise
@@ -99,7 +102,7 @@ void setup(){
   
   // Create and turn on scanner
   screenScanner = new ScreenScanner(width*0.5, height*0.5, width*0.25, 100);
-  scanToggle = true;
+  scanToggle = false;
   scannerCtrl = true;
   scannerAdapt = true;
   
@@ -133,19 +136,18 @@ void setup(){
   // Initialize glyph shader
   glyphShaderTexCtrl = loadShader("glyph_shader.glsl");
   glyphShaderOverlay = loadShader("glyph_shader.glsl");
-  glyphRepeatX = 3; //16
-  glyphRepeatY = 1; //9
   glyphShaderTexCtrl.set("iResolution", float(width), float(height), 0.0);
   glyphShaderTexCtrl.set("iContrast", 0.5);
   glyphShaderOverlay.set("iResolution", float(width), float(height), 0.0);
   glyphShaderOverlay.set("iContrast", 1.0);
   
   // Video input
-  //video = new Movie(this, "VCLP0150.avi");
+  video = new Movie(this, "VCLP0150.avi");
   //video = new Movie(this, "DSC_1789.mp4");
   //video = new Movie(this, "grubbly.mp4");
-  video = new Movie(this, "IMG_0138.mov");
+  //video = new Movie(this, "IMG_0138.mov");
   //video = new Movie(this, "GlitchmanWalking.mp4");
+  //video = new Movie(this, "cymatique_edited.mp4");
   video.loop();
   
   // Noise probability modulation
@@ -157,9 +159,9 @@ void setup(){
 void draw(){
   
   // ===== Analyze sound =====
-  if(frameCount > 30){
-    in.play();
-  }
+  //if(frameCount > 30){
+  //  in.play();
+  //}
   if(audioReact){
     fft.forward(in.left);
     
@@ -431,7 +433,7 @@ void draw(){
     }
   }
   
-  saveFrame();
+  //saveFrame();
 }
 
 void mouseDragged(){
