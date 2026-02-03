@@ -77,11 +77,11 @@ void setup(){
   shader.set("interact", 0.25);
   shader.set("selDensity", exp(-0.1));
   
-  size(540, 540, P2D);
+  //size(540, 540, P2D);
   //size(1080, 1350, P2D);
   //size(540, 810, P2D);
   //size(1080, 360, P2D);
-  //fullScreen(P2D);
+  fullScreen(P2D, 2);
   
   // Compute initial noise
   noiseGraphics.beginDraw();
@@ -269,9 +269,9 @@ void draw(){
   // Compute glyph texture
   if (glyphTextureCtrlIdx > 0 || glyphOverlay){
     noiseSeed(13);
-    glyphSeedA = 2.0*noise(frameCount*0.008);
+    glyphSeedA = 2.0*noise(frameCount*0.002);
     noiseSeed(24);
-    glyphSeedB = 2.0*noise(frameCount*0.008);
+    glyphSeedB = 2.0*noise(frameCount*0.002);
     
     glyphShaderTexCtrl.set("iSeedA", glyphSeedA);
     glyphShaderTexCtrl.set("iSeedB", glyphSeedB);
