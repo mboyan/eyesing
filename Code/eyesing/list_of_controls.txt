@@ -1,40 +1,41 @@
 ===SCANNER CONTROLS===
-scanToggle - bool
-scannerCtrl - bool
-scannerAdapt - bool
+scanToggle - bool X
+scannerCtrl - bool X
+scannerAdapt - bool X
 
 ===LINE TEXTURE CONTROLS===
-lineTextureParamCtrl - bool
-sweepSpeedA - float
-sweepSpeedB - float
-sweepSpeedC - float
-sweepSpeedD - float
-sweepLineWA - float
-sweepLineWB - float
-sweepLineWC - float
-sweepLineWD - float
-modA - bool
-modB - bool
-modC - bool
-modD - bool
+lineTextureParamCtrl - bool X
+sweepSpeedA - float X
+sweepSpeedB - float X
+sweepSpeedC - float X
+sweepSpeedD - float X
+sweepLineWA - float X
+sweepLineWB - float X
+sweepLineWC - float X
+sweepLineWD - float X
+modA - bool X
+modB - bool X
+modC - bool X
+modD - bool X
 
 ===AUDIO REACTIVITY===
-audioReact - bool
-lvlThreshA - float ?
-lvlThreshB - float ?
-lvlThreshC - float ?
-lvlThreshD - float ?
+audioReact - bool X
+lvlThreshA - float ? X
+lvlThreshB - float ? X
+lvlThreshC - float ? X
+lvlThreshD - float ? X
+bandShiftIdx - int X
 
 ===GLYPH CONTROLS===
-glyphOverlay - bool
-glyphRepeatX/glyphRepeatY - int
-glyphTextureCtrlIdx - int
+glyphOverlay - bool X
+glyphRepeatX/glyphRepeatY - int X
+glyphTextureCtrlIdx - int X
 
 ===VIDEO CONTROLS===
-videoTextureParamControl - bool
-videoIdx - int ?
+videoTextureParamControl - bool X
+videoIdx - int ? X
 
 ===NOISE VISUALISATION===
-viewNoise - bool
-probModEdge1 - float
-probModEdge2 - float
+viewNoise - bool X
+probModEdge1 - float X
+probModEdge2 - float X

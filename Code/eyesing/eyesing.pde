@@ -62,11 +62,11 @@ void setup(){
   x1Bus.addInput(2);
   
   // Initialize minim and track
-  //minim = new Minim(this);
-  //in = minim.loadFile("sample_live_coding_jam.wav", 1024); // change to mic input when needed
-  //fft = new FFT(in.bufferSize(), in.sampleRate());
-  //bands = new float[4];
-  //bandShiftIdx = 0;
+  minim = new Minim(this);
+  in = minim.loadFile("sample_live_coding_jam.wav", 1024); // change to mic input when needed
+  fft = new FFT(in.bufferSize(), in.sampleRate());
+  bands = new float[4];
+  bandShiftIdx = 0;
   
   // PGraphics objects
   spinGraphics = createGraphics(width, height, P2D);
@@ -91,10 +91,10 @@ void setup(){
   shader.set("interact", 0.25);
   shader.set("selDensity", exp(-0.1));
   
-  size(540, 540, P2D);
+  //size(540, 540, P2D);
   //size(1080, 1350, P2D);
   //size(540, 810, P2D);
-  //size(1080, 360, P2D);
+  size(1080, 360, P2D);
   //fullScreen(P2D, 2);
   //fullScreen(P2D);
   
@@ -174,9 +174,9 @@ void setup(){
 void draw(){
   
   // ===== Analyze sound =====
-  //if(frameCount > 30){
-  //  in.play();
-  //}
+  if(frameCount > 30){
+    in.play();
+  }
   if(audioReact){
     fft.forward(in.left);
     
@@ -221,7 +221,7 @@ void draw(){
       paramGraphicsA.background(127);
       paramGraphicsA.stroke(modA);
       paramGraphicsA.strokeWeight(sweepLineWA);
-      lineXA = (width + (frameCount*sweepSpeedA)%(width + sweepLineWA))%width - 0.5*sweepLineWA;
+      lineXA = (width + sweepLineWA + (frameCount*sweepSpeedA)%(width + sweepLineWA))%(width + sweepLineWA) - 0.5*sweepLineWA;
       paramGraphicsA.line(lineXA, 0, lineXA, height);
     } else {
       paramGraphicsA.background(modA);
@@ -233,7 +233,7 @@ void draw(){
       paramGraphicsB.background(127);
       paramGraphicsB.stroke(modB);
       paramGraphicsB.strokeWeight(sweepLineWB);
-      lineXB = (width + (frameCount*sweepSpeedB)%(width + sweepLineWB))%width - 0.5*sweepLineWB;
+      lineXB = (width + sweepLineWB + (frameCount*sweepSpeedB)%(width + sweepLineWB))%(width + sweepLineWB) - 0.5*sweepLineWB;
       paramGraphicsB.line(lineXB, 0, lineXB, height);
     } else {
       paramGraphicsB.background(modB);
@@ -245,7 +245,7 @@ void draw(){
       paramGraphicsC.background(127);
       paramGraphicsC.stroke(modC);
       paramGraphicsC.strokeWeight(sweepLineWC);
-      lineXC = (width + (frameCount*sweepSpeedC)%(width + sweepLineWC))%width - 0.5*sweepLineWC;
+      lineXC = (width + sweepLineWC + (frameCount*sweepSpeedC)%(width + sweepLineWC))%(width + sweepLineWC) - 0.5*sweepLineWC;
       paramGraphicsC.line(lineXC, 0, lineXC, height);
     } else {
       paramGraphicsC.background(modC);
@@ -259,7 +259,7 @@ void draw(){
     noiseModGraphics.background(modD);
     noiseModGraphics.stroke(255 - modD);
     noiseModGraphics.strokeWeight(sweepLineWD);
-    lineXD = (width + (frameCount*sweepSpeedD)%(width + sweepLineWD))%width - 0.5*sweepLineWD;
+    lineXD = (width + sweepLineWD + (frameCount*sweepSpeedD)%(width + sweepLineWD))%(width + sweepLineWD) - 0.5*sweepLineWD;
     noiseModGraphics.line(lineXD, 0, lineXD, height);
   } else {
     noiseModGraphics.background(255 - modD);
