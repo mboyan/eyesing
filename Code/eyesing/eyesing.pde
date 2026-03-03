@@ -15,7 +15,7 @@ boolean scanToggle, scannerCtrl, scannerAdapt;
 float bSampleA, bSampleB;
 
 // Texture parameter control
-boolean lineTextureParamCtrl = true;
+boolean lineTextureParamCtrl = false;
 float sweepSpeedA, sweepSpeedB, sweepSpeedC, sweepSpeedD;
 float sweepLineWA, sweepLineWB, sweepLineWC, sweepLineWD;
 float lineXA, lineXB, lineXC, lineXD;
@@ -33,15 +33,16 @@ int bandShiftIdx;
 float[] lvlThresh = {2.0, 0.5, 0.25, 0.125}; // Calibrate before show???
 
 // WPF glyph controls
-boolean glyphOverlay = true;
+boolean glyphOverlay = false;
 float glyphSeedA, glyphSeedB;
 float glyphRepeatX = 1;
 float glyphRepeatY = 1;
-int glyphTextureCtrlIdx = 0; // 0 for none, 1 for beta, 2 for field, 3 for interact
+int glyphTextureCtrlIdx = 1; // 0 for none, 1 for beta, 2 for field, 3 for interact
 
 // Video reading
 Movie video;
-boolean videoTextureParamControl = false;
+PImage inputImg; // for static image parameter control
+boolean videoTextureParamControl = true;
 
 // Noise visualisation
 boolean viewNoise = false;
@@ -93,8 +94,9 @@ void setup(){
   
   //size(540, 540, P2D);
   //size(1080, 1350, P2D);
+  size(1920, 1080, P2D);
   //size(540, 810, P2D);
-  size(1080, 360, P2D);
+  //size(1080, 360, P2D);
   //fullScreen(P2D, 2);
   //fullScreen(P2D);
   
@@ -164,6 +166,9 @@ void setup(){
   //video = new Movie(this, "GlitchmanWalking.mp4");
   //video = new Movie(this, "cymatique_edited.mp4");
   video.loop();
+  
+  inputImg = loadImage("caldera_intro_story.jpg");
+  //inputImg.filter(INVERT);
   
   // Noise probability modulation
   probModEdge1 = 0.05;
@@ -320,9 +325,12 @@ void draw(){
     if (videoTextureParamControl && video.available() == true){
       video.read();
       video.filter(INVERT);
-      shader.set("paramTextureBeta", video);
-      shader.set("paramTextureField", video);
-      shader.set("paramTextureInteract", video);
+      //shader.set("paramTextureBeta", video);
+      //shader.set("paramTextureField", video);
+      //shader.set("paramTextureInteract", video);
+      shader.set("paramTextureBeta", inputImg);
+      shader.set("paramTextureField", inputImg);
+      shader.set("paramTextureInteract", inputImg);
     } else {
       if (glyphTextureCtrlIdx == 1){
         shader.set("paramTextureBeta", glyphGraphicsTexCtrl);
