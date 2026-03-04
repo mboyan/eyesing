@@ -93,10 +93,11 @@ void setup(){
   shader.set("selDensity", exp(-0.1));
   
   //size(540, 540, P2D);
-  size(1080, 1350, P2D);
+  size(1080, 1350, P2D); // 4:5 format
   //size(1920, 1080, P2D);
   //size(540, 810, P2D);
   //size(1080, 360, P2D);
+  //size(1754, 1240, P2D); // A4 150dpi
   //fullScreen(P2D, 2);
   //fullScreen(P2D);
   
@@ -159,16 +160,16 @@ void setup(){
   glyphShaderOverlay.set("iContrast", 1.0);
   
   // Video input
-  video = new Movie(this, "VCLP0150.avi");
+  //video = new Movie(this, "VCLP0150.avi");
   //video = new Movie(this, "DSC_1789.mp4");
   //video = new Movie(this, "grubbly.mp4");
-  //video = new Movie(this, "IMG_0138.mov");
+  video = new Movie(this, "IMG_0138.mov");
   //video = new Movie(this, "GlitchmanWalking.mp4");
   //video = new Movie(this, "cymatique_edited.mp4");
   video.loop();
   
-  inputImg = loadImage("rnkic_intro.jpg");
-  //inputImg.filter(INVERT);
+  inputImg = loadImage("youknow_intro.jpg");
+  inputImg.filter(INVERT);
   
   // Noise probability modulation
   probModEdge1 = 0.05;
@@ -324,7 +325,7 @@ void draw(){
   if (!viewNoise) {
     if (videoTextureParamControl && video.available() == true){
       video.read();
-      video.filter(INVERT);
+      //video.filter(INVERT);
       //shader.set("paramTextureBeta", video);
       //shader.set("paramTextureField", video);
       //shader.set("paramTextureInteract", video);
