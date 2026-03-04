@@ -168,7 +168,7 @@ void setup(){
   //video = new Movie(this, "cymatique_edited.mp4");
   video.loop();
   
-  inputImg = loadImage("youknow_intro.jpg");
+  inputImg = loadImage("djnaif_intro_2.jpg");
   inputImg.filter(INVERT);
   
   // Noise probability modulation
