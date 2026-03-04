@@ -93,8 +93,8 @@ void setup(){
   shader.set("selDensity", exp(-0.1));
   
   //size(540, 540, P2D);
-  //size(1080, 1350, P2D);
-  size(1920, 1080, P2D);
+  size(1080, 1350, P2D);
+  //size(1920, 1080, P2D);
   //size(540, 810, P2D);
   //size(1080, 360, P2D);
   //fullScreen(P2D, 2);
@@ -167,7 +167,7 @@ void setup(){
   //video = new Movie(this, "cymatique_edited.mp4");
   video.loop();
   
-  inputImg = loadImage("caldera_intro_story.jpg");
+  inputImg = loadImage("rnkic_intro.jpg");
   //inputImg.filter(INVERT);
   
   // Noise probability modulation
