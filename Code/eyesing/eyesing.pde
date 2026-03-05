@@ -64,7 +64,7 @@ void setup(){
   
   // Initialize minim and track
   minim = new Minim(this);
-  in = minim.loadFile("Caldera - Music From The Fourth Swamp - 02 Cave Whistle.mp3", 1024); // change to mic input when needed
+  in = minim.loadFile("youknow_jingle.wav", 1024); // change to mic input when needed
   fft = new FFT(in.bufferSize(), in.sampleRate());
   bands = new float[4];
   bandShiftIdx = 0;
@@ -168,7 +168,7 @@ void setup(){
   //video = new Movie(this, "cymatique_edited.mp4");
   video.loop();
   
-  inputImg = loadImage("caldera_intro.jpg");
+  inputImg = loadImage("rnkic_intro.jpg");
   //inputImg.filter(INVERT);
   
   // Noise probability modulation
