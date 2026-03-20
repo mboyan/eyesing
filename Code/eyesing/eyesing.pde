@@ -42,7 +42,7 @@ int glyphTextureCtrlIdx = 1; // 0 for none, 1 for beta, 2 for field, 3 for inter
 // Video reading
 Movie video;
 PImage inputImg; // for static image parameter control
-boolean videoTextureParamControl = true;
+boolean videoTextureParamControl = false;
 
 // Noise visualisation
 boolean viewNoise = false;
@@ -91,9 +91,12 @@ void setup(){
   shader.set("field", 0.0);
   shader.set("interact", 0.25);
   shader.set("selDensity", exp(-0.1));
+  shader.set("xyModelToggle", false);
   
   //size(540, 540, P2D);
-  size(1080, 1350, P2D); // 4:5 format
+  size(800, 800, P2D);
+  //size(1080, 1350, P2D); // 4:5 format
+  //size(1600, 1600, P2D);
   //size(1920, 1080, P2D);
   //size(540, 810, P2D);
   //size(1080, 360, P2D);
@@ -326,12 +329,12 @@ void draw(){
     if (videoTextureParamControl && video.available() == true){
       video.read();
       //video.filter(INVERT);
-      //shader.set("paramTextureBeta", video);
-      //shader.set("paramTextureField", video);
-      //shader.set("paramTextureInteract", video);
-      shader.set("paramTextureBeta", inputImg);
-      shader.set("paramTextureField", inputImg);
-      shader.set("paramTextureInteract", inputImg);
+      shader.set("paramTextureBeta", video);
+      shader.set("paramTextureField", video);
+      shader.set("paramTextureInteract", video);
+      //shader.set("paramTextureBeta", inputImg);
+      //shader.set("paramTextureField", inputImg);
+      //shader.set("paramTextureInteract", inputImg);
     } else {
       if (glyphTextureCtrlIdx == 1){
         shader.set("paramTextureBeta", glyphGraphicsTexCtrl);
