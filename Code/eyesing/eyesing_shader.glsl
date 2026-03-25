@@ -30,6 +30,9 @@ uniform float field;
 uniform float interact;
 uniform float selDensity;
 uniform bool xyModelToggle;
+// uniform bool noiseToggle;
+uniform float xyBlend;
+uniform float noiseBlend;
 
 #define PI 3.14159265358979323846
 
@@ -92,10 +95,13 @@ void main(){
 
 	float pacc = min(exp(-dH * betaMod), 1.0);
 	float noise = texture2D(noiseTexture2, st).x;
-	float newTex = mix(spin, spinProposal, step(noise, pacc)*sel);
+	float newTex = mix(spin, spinProposal, step(noise, pacc)*sel*xyBlend);
+
+	// Blend noise
+	// newTex = mix(newTex, texture2D(noiseTexture2, st).x, noiseBlend);
 
 	// gl_FragColor = vec4(vec3(newTex, pacc, 0.5*dH+0.5), 1.);
-	gl_FragColor = vec4(vec3(newTex), 1.0);
+	gl_FragColor = vec4(mix(vec3(newTex), texture2D(noiseTexture1, st).xyz, noiseBlend), 1.0);
 	// gl_FragColor = vec4(vec3(rndValUnit), 1.0);
 	// gl_FragColor = vec4(vec3(step(pacc, noise) * sel), 1.);
 	// gl_FragColor = vec4(vec3(sel), 1.);

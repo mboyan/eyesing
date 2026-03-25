@@ -7,7 +7,7 @@ import javax.sound.midi.MidiMessage;
 PShader shader, noiseShader, glyphShaderTexCtrl, glyphShaderOverlay;
 PGraphics spinGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC, glyphGraphicsTexCtrl, glyphGraphicsOverlay, noiseModGraphics;
 
-float[] hist;
+//float[] hist;
 
 // Scanner variables
 ScreenScanner screenScanner;
@@ -15,7 +15,6 @@ boolean scanToggle, scannerCtrl, scannerAdapt;
 float bSampleA, bSampleB;
 
 // Texture parameter control
-boolean lineTextureParamCtrl = false;
 float sweepSpeedA, sweepSpeedB, sweepSpeedC, sweepSpeedD;
 float sweepLineWA, sweepLineWB, sweepLineWC, sweepLineWD;
 float lineXA, lineXB, lineXC, lineXD;
@@ -30,7 +29,7 @@ AudioPlayer in;
 boolean audioReact = false;
 float[] bands;
 int bandShiftIdx;
-float[] lvlThresh = {2.0, 0.5, 0.25, 0.125}; // Calibrate before show???
+float[] lvlThresh = {2.0, 0.5, 0.25, 0.125};
 
 // WPF glyph controls
 boolean glyphOverlay = false;
@@ -43,13 +42,15 @@ int glyphTextureCtrlIdx = 0; // 0 for none, 1 for beta, 2 for field, 3 for inter
 Movie video;
 PImage inputImg; // for static image parameter control
 boolean videoTextureParamControl = false;
+boolean videoInvert = false;
 
 // Noise visualisation
-boolean viewNoise = false;
 float probModEdge1, probModEdge2;
+float noiseBlend = 0.0;
 
 // Ising vs XY-model
-boolean toggleXY = true;
+boolean xyToggle = true;
+float xyBlend = 1.0;
 
 // MIDI
 MidiBus f1Bus, x1Bus;
@@ -94,9 +95,10 @@ void setup(){
   shader.set("beta", 0.5);
   shader.set("field", 0.0);
   shader.set("interact", 0.25);
-  //shader.set("selDensity", exp(-0.1));
   shader.set("selDensity", exp(-0.1));
-  shader.set("xyModelToggle", toggleXY);
+  shader.set("xyModelToggle", xyToggle);
+  shader.set("xyBlend", xyBlend);
+  shader.set("noiseBlend", noiseBlend);
   
   //size(540, 540, P2D);
   size(800, 800, P2D);
@@ -119,10 +121,10 @@ void setup(){
   // Pass initial spin state
   shader.set("spinTexture", noiseGraphics);
   
-  hist = new float[width];
-  for (int i = 0; i < hist.length; i++){
-    hist[i] = 0;
-  }
+  //hist = new float[width];
+  //for (int i = 0; i < hist.length; i++){
+  //  hist[i] = 0;
+  //}
   
   //frameRate(0.1);
   
@@ -228,44 +230,44 @@ void draw(){
   // ===========================
   
   // Draw parameter graphics
-  if(lineTextureParamCtrl && !viewNoise){
+  //if(lineTextureParamCtrl){
     
-    paramGraphicsA.beginDraw();
-    if(sweepLineWA < width){
-      paramGraphicsA.background(127);
-      paramGraphicsA.stroke(modA);
-      paramGraphicsA.strokeWeight(sweepLineWA);
-      lineXA = (width + sweepLineWA + (frameCount*sweepSpeedA)%(width + sweepLineWA))%(width + sweepLineWA) - 0.5*sweepLineWA;
-      paramGraphicsA.line(lineXA, 0, lineXA, height);
-    } else {
-      paramGraphicsA.background(modA);
-    }
-    paramGraphicsA.endDraw();
-    
-    paramGraphicsB.beginDraw();
-    if(sweepLineWB < width){
-      paramGraphicsB.background(127);
-      paramGraphicsB.stroke(modB);
-      paramGraphicsB.strokeWeight(sweepLineWB);
-      lineXB = (width + sweepLineWB + (frameCount*sweepSpeedB)%(width + sweepLineWB))%(width + sweepLineWB) - 0.5*sweepLineWB;
-      paramGraphicsB.line(lineXB, 0, lineXB, height);
-    } else {
-      paramGraphicsB.background(modB);
-    }
-    paramGraphicsB.endDraw();
-    
-    paramGraphicsC.beginDraw();
-    if(sweepLineWC < width){
-      paramGraphicsC.background(127);
-      paramGraphicsC.stroke(modC);
-      paramGraphicsC.strokeWeight(sweepLineWC);
-      lineXC = (width + sweepLineWC + (frameCount*sweepSpeedC)%(width + sweepLineWC))%(width + sweepLineWC) - 0.5*sweepLineWC;
-      paramGraphicsC.line(lineXC, 0, lineXC, height);
-    } else {
-      paramGraphicsC.background(modC);
-    }
-    paramGraphicsC.endDraw();
+  paramGraphicsA.beginDraw();
+  if(sweepLineWA < width){
+    paramGraphicsA.background(127);
+    paramGraphicsA.stroke(modA);
+    paramGraphicsA.strokeWeight(sweepLineWA);
+    lineXA = (width + sweepLineWA + (frameCount*sweepSpeedA)%(width + sweepLineWA))%(width + sweepLineWA) - 0.5*sweepLineWA;
+    paramGraphicsA.line(lineXA, 0, lineXA, height);
+  } else {
+    paramGraphicsA.background(modA);
   }
+  paramGraphicsA.endDraw();
+  
+  paramGraphicsB.beginDraw();
+  if(sweepLineWB < width){
+    paramGraphicsB.background(127);
+    paramGraphicsB.stroke(modB);
+    paramGraphicsB.strokeWeight(sweepLineWB);
+    lineXB = (width + sweepLineWB + (frameCount*sweepSpeedB)%(width + sweepLineWB))%(width + sweepLineWB) - 0.5*sweepLineWB;
+    paramGraphicsB.line(lineXB, 0, lineXB, height);
+  } else {
+    paramGraphicsB.background(modB);
+  }
+  paramGraphicsB.endDraw();
+  
+  paramGraphicsC.beginDraw();
+  if(sweepLineWC < width){
+    paramGraphicsC.background(127);
+    paramGraphicsC.stroke(modC);
+    paramGraphicsC.strokeWeight(sweepLineWC);
+    lineXC = (width + sweepLineWC + (frameCount*sweepSpeedC)%(width + sweepLineWC))%(width + sweepLineWC) - 0.5*sweepLineWC;
+    paramGraphicsC.line(lineXC, 0, lineXC, height);
+  } else {
+    paramGraphicsC.background(modC);
+  }
+  paramGraphicsC.endDraw();
+  //}
   
   // Draw noise modulation graphics
   noiseModGraphics.beginDraw();
@@ -330,32 +332,32 @@ void draw(){
   }
   
   // Pass parameter textures
-  if (!viewNoise) {
-    if (videoTextureParamControl && video.available() == true){
-      video.read();
-      //video.filter(INVERT);
-      shader.set("paramTextureBeta", video);
-      shader.set("paramTextureField", video);
-      shader.set("paramTextureInteract", video);
-      //shader.set("paramTextureBeta", inputImg);
-      //shader.set("paramTextureField", inputImg);
-      //shader.set("paramTextureInteract", inputImg);
+  if (videoTextureParamControl && video.available() == true){
+    video.read();
+    if (videoInvert) {
+      video.filter(INVERT);
+    }
+    shader.set("paramTextureBeta", video);
+    shader.set("paramTextureField", video);
+    shader.set("paramTextureInteract", video);
+    //shader.set("paramTextureBeta", inputImg);
+    //shader.set("paramTextureField", inputImg);
+    //shader.set("paramTextureInteract", inputImg);
+  } else {
+    if (glyphTextureCtrlIdx == 1){
+      shader.set("paramTextureBeta", glyphGraphicsTexCtrl);
     } else {
-      if (glyphTextureCtrlIdx == 1){
-        shader.set("paramTextureBeta", glyphGraphicsTexCtrl);
-      } else {
-        shader.set("paramTextureBeta", paramGraphicsA);
-      }
-      if (glyphTextureCtrlIdx == 2){
-        shader.set("paramTextureField", glyphGraphicsTexCtrl);
-      } else {
-        shader.set("paramTextureField", paramGraphicsB);
-      }
-      if (glyphTextureCtrlIdx == 3){
-        shader.set("paramTextureInteract", glyphGraphicsTexCtrl);
-      } else {
-        shader.set("paramTextureInteract", paramGraphicsC);
-      }
+      shader.set("paramTextureBeta", paramGraphicsA);
+    }
+    if (glyphTextureCtrlIdx == 2){
+      shader.set("paramTextureField", glyphGraphicsTexCtrl);
+    } else {
+      shader.set("paramTextureField", paramGraphicsB);
+    }
+    if (glyphTextureCtrlIdx == 3){
+      shader.set("paramTextureInteract", glyphGraphicsTexCtrl);
+    } else {
+      shader.set("paramTextureInteract", paramGraphicsC);
     }
   }
   //shader.set("spinTexture", spinGraphics);
@@ -372,38 +374,41 @@ void draw(){
   // MAIN PATTERN
   // ===========================
   
+  shader.set("xyModelToggle", xyToggle);
+  shader.set("iTime", float(frameCount+12345));
+  shader.set("xyBlend", xyBlend);
+  shader.set("noiseBlend", noiseBlend);
+  
   // Draw spins
-  if (viewNoise){
-    image(noiseGraphics, 0, 0);
-  } else {
-    spinGraphics.beginDraw();
-    spinGraphics.shader(shader);
-    spinGraphics.fill(0);
-    spinGraphics.rect(0, 0, width, height);
-    spinGraphics.endDraw();
-    image(spinGraphics, 0, 0);
-  }
+  //if (viewNoise){
+  //  image(noiseGraphics, 0, 0);
+  //} else {
+  spinGraphics.beginDraw();
+  spinGraphics.shader(shader);
+  spinGraphics.fill(0);
+  spinGraphics.rect(0, 0, width, height);
+  spinGraphics.endDraw();
+  image(spinGraphics, 0, 0);
+  //}
   
   // Feed spin image back to shader
   shader.set("spinTexture", spinGraphics);
-  shader.set("xyModelToggle", toggleXY);
-  shader.set("iTime", float(frameCount+12345));
   
   // Plot histogram
-  loadPixels();
-  for (int i = 0; i < pixels.length; i++){
-    float pixelVal = brightness(pixels[i]);
-    int binIdx = int((width - 1) * pixelVal / 255.0);
-    hist[binIdx] += 0.1;
-  }
-  stroke(255, 0, 0);
-  for (int i = 0; i < hist.length; i++){
-    line(i, 0, i, hist[i]);
-  }
-  updatePixels();
-  for (int i = 0; i < hist.length; i++){
-    hist[i] = 0;
-  }
+  //loadPixels();
+  //for (int i = 0; i < pixels.length; i++){
+  //  float pixelVal = brightness(pixels[i]);
+  //  int binIdx = int((width - 1) * pixelVal / 255.0);
+  //  hist[binIdx] += 0.1;
+  //}
+  //stroke(255, 0, 0);
+  //for (int i = 0; i < hist.length; i++){
+  //  line(i, 0, i, hist[i]);
+  //}
+  //updatePixels();
+  //for (int i = 0; i < hist.length; i++){
+  //  hist[i] = 0;
+  //}
   
   //if(frameCount < 30){
   //  saveFrame();
@@ -513,12 +518,12 @@ void keyPressed(){
   }
   if(key == 'T' || key == 't'){
     // Flip noise probability modulation
-    toggleXY = !toggleXY;
+    xyToggle = !xyToggle;
   }
-  if(key == 'Y' || key == 'y'){
-    // Flip noise probability modulation
-    viewNoise = !viewNoise;
-  }
+  //if(key == 'Y' || key == 'y'){
+  //  // Flip noise probability modulation
+  //  viewNoise = !viewNoise;
+  //}
   if(key == 'S' || key == 's'){
     // Screenshot
     saveFrame("screenshot.tiff");
