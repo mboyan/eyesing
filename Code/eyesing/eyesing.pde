@@ -101,7 +101,7 @@ void setup(){
   shader.set("noiseBlend", noiseBlend);
   
   //size(540, 540, P2D);
-  size(800, 800, P2D);
+  //size(800, 800, P2D);
   //size(1080, 1350, P2D); // 4:5 format
   //size(1600, 1600, P2D);
   //size(1920, 1080, P2D);
@@ -109,7 +109,7 @@ void setup(){
   //size(1080, 360, P2D);
   //size(1754, 1240, P2D); // A4 150dpi
   //fullScreen(P2D, 2);
-  //fullScreen(P2D);
+  fullScreen(P2D);
   
   // Compute initial noise
   noiseGraphics.beginDraw();

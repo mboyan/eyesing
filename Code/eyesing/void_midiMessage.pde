@@ -2,13 +2,13 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
   // Receive a MidiMessage
   // MidiMessage is an abstract class, the actual passed object will be either javax.sound.midi.MetaMessage, javax.sound.midi.ShortMessage, javax.sound.midi.SysexMessage.
   // Check it out here http://java.sun.com/j2se/1.5.0/docs/api/javax/sound/midi/package-summary.html
-  println();
-  println("MidiMessage Data:");
-  println("--------");
-  println("Status Byte/MIDI Command:"+message.getStatus());
-  for (int i = 1;i < message.getMessage().length;i++) {
-    println("Param "+(i+1)+": "+(int)(message.getMessage()[i] & 0xFF));
-  }
+  //println();
+  //println("MidiMessage Data:");
+  //println("--------");
+  //println("Status Byte/MIDI Command:"+message.getStatus());
+  //for (int i = 1;i < message.getMessage().length;i++) {
+  //  println("Param "+(i+1)+": "+(int)(message.getMessage()[i] & 0xFF));
+  //}
   
   int chan = message.getMessage()[1];
   int val = message.getMessage()[2];
@@ -75,8 +75,8 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
   else if (message.getStatus() == 144) // X1 toggle message
   {
     if (chan == 8) {
-      //viewNoise = !viewNoise;
       xyToggle = !xyToggle;
+      println("xyToggle: " + str(xyToggle));
     }
     else if (chan == 9) {
       audioReact = !audioReact;
