@@ -37,7 +37,7 @@ boolean glyphOverlay = false;
 float glyphSeedA, glyphSeedB;
 float glyphRepeatX = 1;
 float glyphRepeatY = 1;
-int glyphTextureCtrlIdx = 1; // 0 for none, 1 for beta, 2 for field, 3 for interact
+int glyphTextureCtrlIdx = 0; // 0 for none, 1 for beta, 2 for field, 3 for interact
 
 // Video reading
 Movie video;
@@ -49,7 +49,7 @@ boolean viewNoise = false;
 float probModEdge1, probModEdge2;
 
 // Ising vs XY-model
-boolean toggleXY = false;
+boolean toggleXY = true;
 
 // MIDI
 MidiBus f1Bus, x1Bus;
@@ -89,10 +89,12 @@ void setup(){
   
   // Initialize spin shader
   shader = loadShader("eyesing_shader.glsl");
+  shader.set("iTime", 0.0);
   shader.set("iResolution", float(width), float(height), 0.0);
   shader.set("beta", 0.5);
   shader.set("field", 0.0);
   shader.set("interact", 0.25);
+  //shader.set("selDensity", exp(-0.1));
   shader.set("selDensity", exp(-0.1));
   shader.set("xyModelToggle", toggleXY);
   
@@ -122,7 +124,7 @@ void setup(){
     hist[i] = 0;
   }
   
-  frameRate(0.1);
+  //frameRate(0.1);
   
   // Create and turn on scanner
   screenScanner = new ScreenScanner(width*0.5, height*0.5, width*0.25, 100);
@@ -385,6 +387,7 @@ void draw(){
   // Feed spin image back to shader
   shader.set("spinTexture", spinGraphics);
   shader.set("xyModelToggle", toggleXY);
+  shader.set("iTime", float(frameCount+12345));
   
   // Plot histogram
   loadPixels();
@@ -511,6 +514,10 @@ void keyPressed(){
   if(key == 'T' || key == 't'){
     // Flip noise probability modulation
     toggleXY = !toggleXY;
+  }
+  if(key == 'Y' || key == 'y'){
+    // Flip noise probability modulation
+    viewNoise = !viewNoise;
   }
   if(key == 'S' || key == 's'){
     // Screenshot

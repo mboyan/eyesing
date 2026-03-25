@@ -67,16 +67,16 @@ void main(){
 
 	// Quantise if standard Ising model
 	float scaleFactor = mix(1, 2, modelSelector) * PI;
-	float spin = mix(step(0.5, tex), tex, modelSelector) * scaleFactor;
-	float spinl = mix(step(0.5, texl), texl, modelSelector) * scaleFactor;
-	float spinr = mix(step(0.5, texr), texr, modelSelector) * scaleFactor;
-	float spint = mix(step(0.5, text), text, modelSelector) * scaleFactor;
-	float spinb = mix(step(0.5, texb), texb, modelSelector) * scaleFactor;
+	float spin = mix(step(0.5, tex), tex, modelSelector);
+	float spinl = mix(step(0.5, texl), texl, modelSelector);
+	float spinr = mix(step(0.5, texr), texr, modelSelector);
+	float spint = mix(step(0.5, text), text, modelSelector);
+	float spinb = mix(step(0.5, texb), texb, modelSelector);
 
 	// Compute new state proposal
 	uvec3 rndVal = pcg3d(uvec3(st*iResolution.xy, iTime));
-	float rndValUnit = fract(rndVal.x ^ rndVal.y ^ rndVal.z);
-	float texProposal = mix(1 - spin, fract(tex + (2.0*rndValUnit - 1.0)*0.01), modelSelector);
+	float rndValUnit = float(rndVal.x ^ rndVal.y ^ rndVal.z) / 4294967295.0;
+	float spinProposal = mix(1 - spin, fract(tex + (2.0*rndValUnit - 1.0)*0.1), modelSelector);
 
 	// Translate texture into spin values (-1, 1)
 	// float spin = tex * 2. - 1.;
@@ -86,16 +86,17 @@ void main(){
 	// float spinb = texb * 2. - 1.;
 
 	float sel = step(selDensity, texture2D(noiseTexture1, st).x);
-	float hold = hamiltonian(spin, spinl, spinr, spint, spinb, interactMod, fieldMod);
-	float hnew = hamiltonian(texProposal * scaleFactor, spinl, spinr, spint, spinb, interactMod, fieldMod);
+	float hold = hamiltonian(spin * scaleFactor, spinl * scaleFactor, spinr * scaleFactor, spint * scaleFactor, spinb * scaleFactor, interactMod, fieldMod);
+	float hnew = hamiltonian(spinProposal * scaleFactor, spinl * scaleFactor, spinr * scaleFactor, spint * scaleFactor, spinb * scaleFactor, interactMod, fieldMod);
 	float dH = hnew - hold;
 
 	float pacc = min(exp(-dH * betaMod), 1.0);
 	float noise = texture2D(noiseTexture2, st).x;
-	float newTex = tex;//mix(tex, texProposal, step(noise, pacc)*sel);
+	float newTex = mix(spin, spinProposal, step(noise, pacc)*sel);
 
 	// gl_FragColor = vec4(vec3(newTex, pacc, 0.5*dH+0.5), 1.);
 	gl_FragColor = vec4(vec3(newTex), 1.0);
+	// gl_FragColor = vec4(vec3(rndValUnit), 1.0);
 	// gl_FragColor = vec4(vec3(step(pacc, noise) * sel), 1.);
 	// gl_FragColor = vec4(vec3(sel), 1.);
 	// gl_FragColor = vec4(vec3(tex-texl-texr-text-texb), 1.);
