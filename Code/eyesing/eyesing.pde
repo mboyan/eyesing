@@ -7,7 +7,7 @@ import javax.sound.midi.MidiMessage;
 PShader shader, noiseShader, glyphShaderTexCtrl, glyphShaderOverlay;
 PGraphics spinGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC, glyphGraphicsTexCtrl, glyphGraphicsOverlay, noiseModGraphics;
 
-//float[] hist;
+float[] hist;
 
 // Scanner variables
 ScreenScanner screenScanner;
@@ -47,6 +47,9 @@ boolean videoTextureParamControl = false;
 // Noise visualisation
 boolean viewNoise = false;
 float probModEdge1, probModEdge2;
+
+// Ising vs XY-model
+boolean toggleXY = false;
 
 // MIDI
 MidiBus f1Bus, x1Bus;
@@ -91,7 +94,7 @@ void setup(){
   shader.set("field", 0.0);
   shader.set("interact", 0.25);
   shader.set("selDensity", exp(-0.1));
-  shader.set("xyModelToggle", false);
+  shader.set("xyModelToggle", toggleXY);
   
   //size(540, 540, P2D);
   size(800, 800, P2D);
@@ -114,12 +117,12 @@ void setup(){
   // Pass initial spin state
   shader.set("spinTexture", noiseGraphics);
   
-  //hist = new float[width];
-  //for (int i = 0; i < hist.length; i++){
-  //  hist[i] = 0;
-  //}
+  hist = new float[width];
+  for (int i = 0; i < hist.length; i++){
+    hist[i] = 0;
+  }
   
-  //frameRate(1);
+  frameRate(0.1);
   
   // Create and turn on scanner
   screenScanner = new ScreenScanner(width*0.5, height*0.5, width*0.25, 100);
@@ -381,22 +384,23 @@ void draw(){
   
   // Feed spin image back to shader
   shader.set("spinTexture", spinGraphics);
+  shader.set("xyModelToggle", toggleXY);
   
   // Plot histogram
-  //loadPixels();
-  //for (int i = 0; i < pixels.length; i++){
-  //  float pixelVal = brightness(pixels[i]);
-  //  int binIdx = int((width - 1) * pixelVal / 255.0);
-  //  hist[binIdx] += 0.1;
-  //}
-  //stroke(255, 0, 0);
-  //for (int i = 0; i < hist.length; i++){
-  //  line(i, 0, i, hist[i]);
-  //}
-  //updatePixels();
-  //for (int i = 0; i < hist.length; i++){
-  //  hist[i] = 0;
-  //}
+  loadPixels();
+  for (int i = 0; i < pixels.length; i++){
+    float pixelVal = brightness(pixels[i]);
+    int binIdx = int((width - 1) * pixelVal / 255.0);
+    hist[binIdx] += 0.1;
+  }
+  stroke(255, 0, 0);
+  for (int i = 0; i < hist.length; i++){
+    line(i, 0, i, hist[i]);
+  }
+  updatePixels();
+  for (int i = 0; i < hist.length; i++){
+    hist[i] = 0;
+  }
   
   //if(frameCount < 30){
   //  saveFrame();
@@ -503,6 +507,10 @@ void keyPressed(){
   if(key == 'R' || key == 'r'){
     // Flip noise probability modulation
     modD = (modD == 0) ? 255 : 0;
+  }
+  if(key == 'T' || key == 't'){
+    // Flip noise probability modulation
+    toggleXY = !toggleXY;
   }
   if(key == 'S' || key == 's'){
     // Screenshot

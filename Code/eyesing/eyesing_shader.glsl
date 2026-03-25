@@ -92,7 +92,7 @@ void main(){
 
 	float pacc = min(exp(-dH * betaMod), 1.0);
 	float noise = texture2D(noiseTexture2, st).x;
-	float newTex = mix(tex, texProposal, step(noise, pacc)*sel);
+	float newTex = tex;//mix(tex, texProposal, step(noise, pacc)*sel);
 
 	// gl_FragColor = vec4(vec3(newTex, pacc, 0.5*dH+0.5), 1.);
 	gl_FragColor = vec4(vec3(newTex), 1.0);
