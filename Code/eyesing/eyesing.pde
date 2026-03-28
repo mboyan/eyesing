@@ -26,7 +26,7 @@ float penalty;
 Minim minim;
 FFT fft;
 AudioPlayer in;
-boolean audioReact = false;
+boolean audioReact = true;
 float[] bands;
 int bandShiftIdx;
 float[] lvlThresh = {2.0, 0.5, 0.25, 0.125};
@@ -68,7 +68,7 @@ void setup(){
   
   // Initialize minim and track
   minim = new Minim(this);
-  in = minim.loadFile("youknow_jingle.wav", 1024); // change to mic input when needed
+  in = minim.loadFile("260327_eyesing_demo_soundtrack.mp3", 1024); // change to mic input when needed
   fft = new FFT(in.bufferSize(), in.sampleRate());
   bands = new float[4];
   bandShiftIdx = 0;
@@ -130,8 +130,8 @@ void setup(){
   
   // Create and turn on scanner
   screenScanner = new ScreenScanner(width*0.5, height*0.5, width*0.25, 100);
-  scanToggle = false;
-  scannerCtrl = true;
+  scanToggle = true;
+  scannerCtrl = false;
   scannerAdapt = true;
   
   // Line patterns for parameter control
@@ -139,9 +139,9 @@ void setup(){
   sweepSpeedB = -1;
   sweepSpeedC = -10;
   sweepSpeedD = 5;
-  sweepLineWA = 100;
-  sweepLineWB = 200;
-  sweepLineWC = 50;
+  sweepLineWA = 0;
+  sweepLineWB = 0;
+  sweepLineWC = 0;
   sweepLineWD = 0;
   modA = 0;
   modB = 0;
@@ -237,7 +237,10 @@ void draw(){
     paramGraphicsA.background(127);
     paramGraphicsA.stroke(modA);
     paramGraphicsA.strokeWeight(sweepLineWA);
-    lineXA = (width + sweepLineWA + (frameCount*sweepSpeedA)%(width + sweepLineWA))%(width + sweepLineWA) - 0.5*sweepLineWA;
+    //lineXA = (width + sweepLineWA + (frameCount*sweepSpeedA)%(width + sweepLineWA))%(width + sweepLineWA) - 0.5*sweepLineWA;
+    lineXA += sweepSpeedA + 0.5*sweepLineWA;
+    lineXA = lineXA%(width + sweepLineWA);
+    lineXA -= 0.5*sweepLineWA;
     paramGraphicsA.line(lineXA, 0, lineXA, height);
   } else {
     paramGraphicsA.background(modA);
@@ -249,7 +252,10 @@ void draw(){
     paramGraphicsB.background(127);
     paramGraphicsB.stroke(modB);
     paramGraphicsB.strokeWeight(sweepLineWB);
-    lineXB = (width + sweepLineWB + (frameCount*sweepSpeedB)%(width + sweepLineWB))%(width + sweepLineWB) - 0.5*sweepLineWB;
+    //lineXB = (width + sweepLineWB + (frameCount*sweepSpeedB)%(width + sweepLineWB))%(width + sweepLineWB) - 0.5*sweepLineWB;
+    lineXB += sweepSpeedB + 0.5*sweepLineWB;
+    lineXB = lineXB%(width + sweepLineWB);
+    lineXB -= 0.5*sweepLineWB;
     paramGraphicsB.line(lineXB, 0, lineXB, height);
   } else {
     paramGraphicsB.background(modB);
@@ -261,7 +267,10 @@ void draw(){
     paramGraphicsC.background(127);
     paramGraphicsC.stroke(modC);
     paramGraphicsC.strokeWeight(sweepLineWC);
-    lineXC = (width + sweepLineWC + (frameCount*sweepSpeedC)%(width + sweepLineWC))%(width + sweepLineWC) - 0.5*sweepLineWC;
+    //lineXC = (width + sweepLineWC + (frameCount*sweepSpeedC)%(width + sweepLineWC))%(width + sweepLineWC) - 0.5*sweepLineWC;
+    lineXC += sweepSpeedC + 0.5*sweepLineWC;
+    lineXC = lineXC%(width + sweepLineWC);
+    lineXC -= 0.5*sweepLineWC;
     paramGraphicsC.line(lineXC, 0, lineXC, height);
   } else {
     paramGraphicsC.background(modC);
@@ -275,7 +284,10 @@ void draw(){
     noiseModGraphics.background(modD);
     noiseModGraphics.stroke(255 - modD);
     noiseModGraphics.strokeWeight(sweepLineWD);
-    lineXD = (width + sweepLineWD + (frameCount*sweepSpeedD)%(width + sweepLineWD))%(width + sweepLineWD) - 0.5*sweepLineWD;
+    //lineXD = (width + sweepLineWD + (frameCount*sweepSpeedD)%(width + sweepLineWD))%(width + sweepLineWD) - 0.5*sweepLineWD;
+    lineXD += sweepSpeedD + 0.5*sweepLineWD;
+    lineXD = lineXD%(width + sweepLineWD);
+    lineXD -= 0.5*sweepLineWD;
     noiseModGraphics.line(lineXD, 0, lineXD, height);
   } else {
     noiseModGraphics.background(255 - modD);
