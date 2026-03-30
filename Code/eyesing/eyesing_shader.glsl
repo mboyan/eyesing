@@ -81,13 +81,6 @@ void main(){
 	float rndValUnit = float(rndVal.x ^ rndVal.y ^ rndVal.z) / 4294967295.0;
 	float spinProposal = mix(1 - spin, fract(tex + (2.0*rndValUnit - 1.0)*0.1), modelSelector);
 
-	// Translate texture into spin values (-1, 1)
-	// float spin = tex * 2. - 1.;
-	// float spinl = texl * 2. - 1.;
-	// float spinr = texr * 2. - 1.;
-	// float spint = text * 2. - 1.;
-	// float spinb = texb * 2. - 1.;
-
 	float sel = step(selDensity, texture2D(noiseTexture1, st).x);
 	float hold = hamiltonian(spin * scaleFactor, spinl * scaleFactor, spinr * scaleFactor, spint * scaleFactor, spinb * scaleFactor, interactMod, fieldMod);
 	float hnew = hamiltonian(spinProposal * scaleFactor, spinl * scaleFactor, spinr * scaleFactor, spint * scaleFactor, spinb * scaleFactor, interactMod, fieldMod);
@@ -97,11 +90,8 @@ void main(){
 	float noise = texture2D(noiseTexture2, st).x;
 	float newTex = mix(spin, spinProposal, step(noise, pacc)*sel*xyBlend);
 
-	// Blend noise
-	// newTex = mix(newTex, texture2D(noiseTexture2, st).x, noiseBlend);
-
 	// gl_FragColor = vec4(vec3(newTex, pacc, 0.5*dH+0.5), 1.);
-	gl_FragColor = vec4(mix(vec3(newTex), texture2D(noiseTexture1, st).xyz, noiseBlend), 1.0);
+	gl_FragColor = vec4(mix(vec3(newTex), texture2D(noiseTexture1, st).xyz, noiseBlend), 1.0); // Blend noise
 	// gl_FragColor = vec4(vec3(rndValUnit), 1.0);
 	// gl_FragColor = vec4(vec3(step(pacc, noise) * sel), 1.);
 	// gl_FragColor = vec4(vec3(sel), 1.);

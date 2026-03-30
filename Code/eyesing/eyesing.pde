@@ -26,7 +26,7 @@ float penalty;
 Minim minim;
 FFT fft;
 AudioPlayer in;
-boolean audioReact = true;
+boolean audioReact = false;
 float[] bands;
 int bandShiftIdx;
 float[] lvlThresh = {2.0, 0.5, 0.25, 0.125};
@@ -130,18 +130,18 @@ void setup(){
   
   // Create and turn on scanner
   screenScanner = new ScreenScanner(width*0.5, height*0.5, width*0.25, 100);
-  scanToggle = true;
+  scanToggle = false;
   scannerCtrl = false;
-  scannerAdapt = true;
+  scannerAdapt = false;
   
   // Line patterns for parameter control
-  sweepSpeedA = -5;
-  sweepSpeedB = -1;
-  sweepSpeedC = -10;
-  sweepSpeedD = 5;
-  sweepLineWA = 0;
-  sweepLineWB = 0;
-  sweepLineWC = 0;
+  sweepSpeedA = 1;
+  sweepSpeedB = -10;
+  sweepSpeedC = -5;
+  sweepSpeedD = 1;
+  sweepLineWA = 10;
+  sweepLineWB = 20;
+  sweepLineWC = 30;
   sweepLineWD = 0;
   modA = 0;
   modB = 0;
@@ -160,6 +160,10 @@ void setup(){
   paramGraphicsC.beginDraw();
   paramGraphicsC.background(127);
   paramGraphicsC.endDraw();
+  
+  noiseModGraphics.beginDraw();
+  noiseModGraphics.background(255);
+  noiseModGraphics.endDraw();
   
   // Initialize glyph shader
   glyphShaderTexCtrl = loadShader("glyph_shader.glsl");
@@ -182,16 +186,17 @@ void setup(){
   //inputImg.filter(INVERT);
   
   // Noise probability modulation
-  probModEdge1 = 0.05;
-  probModEdge2 = sqrt(2);
+  probModEdge1 = 0.25;
+  probModEdge2 = sqrt(2)*0.4;
 }
 
 
 void draw(){
   
   // ===== Analyze sound =====
-  if(frameCount > 30){
-    in.play();
+  if(frameCount == 30){
+    //in.play();
+    //sweepLineWD = width;
   }
   if(audioReact){
     fft.forward(in.left);
@@ -225,74 +230,7 @@ void draw(){
     bands[(bandShiftIdx+3)%4] /= fft.specSize()*0.25;
   }
   
-  // ===========================
-  // PATTERN PRE-PROCESSING
-  // ===========================
-  
-  // Draw parameter graphics
-  //if(lineTextureParamCtrl){
-    
-  paramGraphicsA.beginDraw();
-  if(sweepLineWA < width){
-    paramGraphicsA.background(127);
-    paramGraphicsA.stroke(modA);
-    paramGraphicsA.strokeWeight(sweepLineWA);
-    //lineXA = (width + sweepLineWA + (frameCount*sweepSpeedA)%(width + sweepLineWA))%(width + sweepLineWA) - 0.5*sweepLineWA;
-    lineXA += sweepSpeedA + 0.5*sweepLineWA;
-    lineXA = lineXA%(width + sweepLineWA);
-    lineXA -= 0.5*sweepLineWA;
-    paramGraphicsA.line(lineXA, 0, lineXA, height);
-  } else {
-    paramGraphicsA.background(modA);
-  }
-  paramGraphicsA.endDraw();
-  
-  paramGraphicsB.beginDraw();
-  if(sweepLineWB < width){
-    paramGraphicsB.background(127);
-    paramGraphicsB.stroke(modB);
-    paramGraphicsB.strokeWeight(sweepLineWB);
-    //lineXB = (width + sweepLineWB + (frameCount*sweepSpeedB)%(width + sweepLineWB))%(width + sweepLineWB) - 0.5*sweepLineWB;
-    lineXB += sweepSpeedB + 0.5*sweepLineWB;
-    lineXB = lineXB%(width + sweepLineWB);
-    lineXB -= 0.5*sweepLineWB;
-    paramGraphicsB.line(lineXB, 0, lineXB, height);
-  } else {
-    paramGraphicsB.background(modB);
-  }
-  paramGraphicsB.endDraw();
-  
-  paramGraphicsC.beginDraw();
-  if(sweepLineWC < width){
-    paramGraphicsC.background(127);
-    paramGraphicsC.stroke(modC);
-    paramGraphicsC.strokeWeight(sweepLineWC);
-    //lineXC = (width + sweepLineWC + (frameCount*sweepSpeedC)%(width + sweepLineWC))%(width + sweepLineWC) - 0.5*sweepLineWC;
-    lineXC += sweepSpeedC + 0.5*sweepLineWC;
-    lineXC = lineXC%(width + sweepLineWC);
-    lineXC -= 0.5*sweepLineWC;
-    paramGraphicsC.line(lineXC, 0, lineXC, height);
-  } else {
-    paramGraphicsC.background(modC);
-  }
-  paramGraphicsC.endDraw();
-  //}
-  
-  // Draw noise modulation graphics
-  noiseModGraphics.beginDraw();
-  if(sweepLineWD < width){
-    noiseModGraphics.background(modD);
-    noiseModGraphics.stroke(255 - modD);
-    noiseModGraphics.strokeWeight(sweepLineWD);
-    //lineXD = (width + sweepLineWD + (frameCount*sweepSpeedD)%(width + sweepLineWD))%(width + sweepLineWD) - 0.5*sweepLineWD;
-    lineXD += sweepSpeedD + 0.5*sweepLineWD;
-    lineXD = lineXD%(width + sweepLineWD);
-    lineXD -= 0.5*sweepLineWD;
-    noiseModGraphics.line(lineXD, 0, lineXD, height);
-  } else {
-    noiseModGraphics.background(255 - modD);
-  }
-  noiseModGraphics.endDraw();
+  // ===== Assign patterns =====
   
   // Update noise shader
   noiseShader.set("iTime", float(frameCount));
@@ -496,6 +434,67 @@ void draw(){
       shader.set("interact", map(screenScanner.pos.z, 0, width, -0.1, 1.0));
     }
   }
+  
+  // ===========================
+  // NEXT ROUND PATTERN PRE-PROCESSING
+  // ===========================
+    
+  paramGraphicsA.beginDraw();
+  if(sweepLineWA < width){
+    paramGraphicsA.background(127);
+    paramGraphicsA.stroke(modA);
+    paramGraphicsA.strokeWeight(sweepLineWA);
+    lineXA += sweepSpeedA + 0.5*sweepLineWA;
+    lineXA = lineXA%(width + sweepLineWA);
+    lineXA -= 0.5*sweepLineWA;
+    paramGraphicsA.line(lineXA, 0, lineXA, height);
+  } else {
+    paramGraphicsA.background(modA);
+  }
+  paramGraphicsA.endDraw();
+  
+  paramGraphicsB.beginDraw();
+  if(sweepLineWB < width){
+    paramGraphicsB.background(127);
+    paramGraphicsB.stroke(modB);
+    paramGraphicsB.strokeWeight(sweepLineWB);
+    lineXB += sweepSpeedB + 0.5*sweepLineWB;
+    lineXB = lineXB%(width + sweepLineWB);
+    lineXB -= 0.5*sweepLineWB;
+    paramGraphicsB.line(lineXB, 0, lineXB, height);
+  } else {
+    paramGraphicsB.background(modB);
+  }
+  paramGraphicsB.endDraw();
+  
+  paramGraphicsC.beginDraw();
+  if(sweepLineWC < width){
+    paramGraphicsC.background(127);
+    paramGraphicsC.stroke(modC);
+    paramGraphicsC.strokeWeight(sweepLineWC);
+    lineXC += sweepSpeedC + 0.5*sweepLineWC;
+    lineXC = lineXC%(width + sweepLineWC);
+    lineXC -= 0.5*sweepLineWC;
+    paramGraphicsC.line(lineXC, 0, lineXC, height);
+  } else {
+    paramGraphicsC.background(modC);
+  }
+  paramGraphicsC.endDraw();
+  
+  // Draw noise modulation graphics
+  noiseModGraphics.beginDraw();
+  if(sweepLineWD < width){
+    noiseModGraphics.background(modD);
+    noiseModGraphics.stroke(255 - modD);
+    noiseModGraphics.strokeWeight(sweepLineWD);
+    lineXD += sweepSpeedD + 0.5*sweepLineWD;
+    lineXD = lineXD%(width + sweepLineWD);
+    lineXD -= 0.5*sweepLineWD;
+    noiseModGraphics.line(lineXD, 0, lineXD, height);
+  } else {
+    noiseModGraphics.background(255 - modD);
+  }
+  noiseModGraphics.endDraw();
   
   //saveFrame();
 }
