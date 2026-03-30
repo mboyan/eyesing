@@ -75,8 +75,8 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
   else if (message.getStatus() == 144) // X1 toggle message
   {
     if (chan == 8) {
-      xyToggle = !xyToggle;
-      println("xyToggle: " + str(xyToggle));
+      //xyToggle = !xyToggle;
+      //println("xyToggle: " + str(xyToggle));
     }
     else if (chan == 9) {
       audioReact = !audioReact;

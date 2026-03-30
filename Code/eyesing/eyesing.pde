@@ -7,7 +7,7 @@ import javax.sound.midi.MidiMessage;
 PShader shader, noiseShader, glyphShaderTexCtrl, glyphShaderOverlay;
 PGraphics spinGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC, glyphGraphicsTexCtrl, glyphGraphicsOverlay, noiseModGraphics;
 
-//float[] hist;
+float[] hist;
 
 // Scanner variables
 ScreenScanner screenScanner;
@@ -49,11 +49,14 @@ float probModEdge1, probModEdge2;
 float noiseBlend = 0.0;
 
 // Ising vs XY-model
-boolean xyToggle = true;
+float modelSelector = 1.0;
 float xyBlend = 1.0;
 
 // MIDI
 MidiBus f1Bus, x1Bus;
+
+// Periodic parameter modulation
+float modSpeed = 0.001;
 
 void setup(){
   
@@ -96,7 +99,7 @@ void setup(){
   shader.set("field", 0.0);
   shader.set("interact", 0.25);
   shader.set("selDensity", exp(-0.1));
-  shader.set("xyModelToggle", xyToggle);
+  shader.set("modelSelector", modelSelector);
   shader.set("xyBlend", xyBlend);
   shader.set("noiseBlend", noiseBlend);
   
@@ -121,10 +124,10 @@ void setup(){
   // Pass initial spin state
   shader.set("spinTexture", noiseGraphics);
   
-  //hist = new float[width];
-  //for (int i = 0; i < hist.length; i++){
-  //  hist[i] = 0;
-  //}
+  hist = new float[width];
+  for (int i = 0; i < hist.length; i++){
+    hist[i] = 0;
+  }
   
   //frameRate(0.1);
   
@@ -192,6 +195,11 @@ void setup(){
 
 
 void draw(){
+  
+  // ===== Time-dependent parameters =====
+  modelSelector = max(min(cos(frameCount*modSpeed)*2 + 1.0, 1.0), 0.0);
+  //noiseBlend = max(pow(sin(frameCount*0.5*modSpeed - QUARTER_PI), 100) - 0.99, 0.0);
+  noiseBlend = pow(modSpeed, 5)*(1 - pow(modSpeed, 10));
   
   // ===== Analyze sound =====
   if(frameCount == 30){
@@ -324,7 +332,7 @@ void draw(){
   // MAIN PATTERN
   // ===========================
   
-  shader.set("xyModelToggle", xyToggle);
+  shader.set("modelSelector", modelSelector);
   shader.set("iTime", float(frameCount+12345));
   shader.set("xyBlend", xyBlend);
   shader.set("noiseBlend", noiseBlend);
@@ -345,20 +353,20 @@ void draw(){
   shader.set("spinTexture", spinGraphics);
   
   // Plot histogram
-  //loadPixels();
-  //for (int i = 0; i < pixels.length; i++){
-  //  float pixelVal = brightness(pixels[i]);
-  //  int binIdx = int((width - 1) * pixelVal / 255.0);
-  //  hist[binIdx] += 0.1;
-  //}
-  //stroke(255, 0, 0);
-  //for (int i = 0; i < hist.length; i++){
-  //  line(i, 0, i, hist[i]);
-  //}
-  //updatePixels();
-  //for (int i = 0; i < hist.length; i++){
-  //  hist[i] = 0;
-  //}
+  loadPixels();
+  for (int i = 0; i < pixels.length; i++){
+    float pixelVal = brightness(pixels[i]);
+    int binIdx = int((width - 1) * pixelVal / 255.0);
+    hist[binIdx] += 0.1;
+  }
+  stroke(255, 0, 0);
+  for (int i = 0; i < hist.length; i++){
+    line(i, 0, i, hist[i]);
+  }
+  updatePixels();
+  for (int i = 0; i < hist.length; i++){
+    hist[i] = 0;
+  }
   
   //if(frameCount < 30){
   //  saveFrame();
@@ -527,10 +535,10 @@ void keyPressed(){
     // Flip noise probability modulation
     modD = (modD == 0) ? 255 : 0;
   }
-  if(key == 'T' || key == 't'){
-    // Flip noise probability modulation
-    xyToggle = !xyToggle;
-  }
+  //if(key == 'T' || key == 't'){
+  //  // Flip noise probability modulation
+  //  xyToggle = !xyToggle;
+  //}
   //if(key == 'Y' || key == 'y'){
   //  // Flip noise probability modulation
   //  viewNoise = !viewNoise;

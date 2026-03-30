@@ -30,7 +30,7 @@ uniform float field;
 uniform float interact;
 uniform float selDensity;
 uniform bool xyModelToggle;
-// uniform bool noiseToggle;
+uniform float modelSelector;
 uniform float xyBlend;
 uniform float noiseBlend;
 
@@ -61,7 +61,7 @@ void main(){
     float interactMod = interact + texture2D(paramTextureInteract, 1. - st).z*2. - 1.;
 
 	// Read spin texture
-	float modelSelector = float(xyModelToggle);
+	// float modelSelector = float(xyModelToggle);
 	float tex = texture2D(spinTexture, st).x;
 	float texl = texture2D(spinTexture, st + vec2(-1./iResolution.x, 0.)).x;
 	float texr = texture2D(spinTexture, st + vec2(1./iResolution.x, 0.)).x;
