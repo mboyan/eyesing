@@ -19,14 +19,16 @@ float sweepSpeedA, sweepSpeedB, sweepSpeedC, sweepSpeedD;
 float sweepLineWA, sweepLineWB, sweepLineWC, sweepLineWD;
 float lineXA, lineXB, lineXC, lineXD;
 float modA, modB, modC, modD;
+boolean invertSpins = false;
 
 float penalty;
 
 // Audio reactivity
 Minim minim;
 FFT fft;
-AudioPlayer in;
-boolean audioReact = true;
+//AudioPlayer in;
+AudioInput in;
+boolean audioReact = false;
 float[] bands;
 int bandShiftIdx;
 float[] lvlThresh = {2.0, 0.5, 0.25, 0.125};
@@ -43,10 +45,12 @@ Movie video;
 PImage inputImg; // for static image parameter control
 boolean videoTextureParamControl = false;
 boolean videoInvert = false;
+String[] videoTitles = {"VCLP0150.avi", "DSC_1789.mp4", "grubbly.mp4", "IMG_0138.mov", "GlitchmanWalking.mp4", "IMG-3278.mov", "DSC_0216.mov"};
 
 // Noise visualisation
 float probModEdge1, probModEdge2;
 float noiseBlend = 0.0;
+boolean quantizeNoise = false;
 
 // Ising vs XY-model
 boolean xyToggle = true;
@@ -68,7 +72,8 @@ void setup(){
   
   // Initialize minim and track
   minim = new Minim(this);
-  in = minim.loadFile("260327_eyesing_demo_soundtrack.mp3", 1024); // change to mic input when needed
+  //in = minim.loadFile("260327_eyesing_demo_soundtrack.mp3", 1024); // change to mic input when needed
+  in = minim.getLineIn();
   fft = new FFT(in.bufferSize(), in.sampleRate());
   bands = new float[4];
   bandShiftIdx = 0;
@@ -99,6 +104,8 @@ void setup(){
   shader.set("xyModelToggle", xyToggle);
   shader.set("xyBlend", xyBlend);
   shader.set("noiseBlend", noiseBlend);
+  shader.set("invert", invertSpins);
+  shader.set("quantNoise", quantizeNoise);
   
   //size(540, 540, P2D);
   //size(800, 800, P2D);
@@ -108,8 +115,8 @@ void setup(){
   //size(540, 810, P2D);
   //size(1080, 360, P2D);
   //size(1754, 1240, P2D); // A4 150dpi
-  //fullScreen(P2D, 2);
-  fullScreen(P2D);
+  fullScreen(P2D, 2);
+  //fullScreen(P2D);
   
   // Compute initial noise
   noiseGraphics.beginDraw();
@@ -190,9 +197,9 @@ void setup(){
 void draw(){
   
   // ===== Analyze sound =====
-  if(frameCount > 30){
-    in.play();
-  }
+  //if(frameCount > 30){
+  //  in.play();
+  //}
   if(audioReact){
     fft.forward(in.left);
     
@@ -228,16 +235,12 @@ void draw(){
   // ===========================
   // PATTERN PRE-PROCESSING
   // ===========================
-  
-  // Draw parameter graphics
-  //if(lineTextureParamCtrl){
     
   paramGraphicsA.beginDraw();
   if(sweepLineWA < width){
     paramGraphicsA.background(127);
     paramGraphicsA.stroke(modA);
     paramGraphicsA.strokeWeight(sweepLineWA);
-    //lineXA = (width + sweepLineWA + (frameCount*sweepSpeedA)%(width + sweepLineWA))%(width + sweepLineWA) - 0.5*sweepLineWA;
     lineXA += sweepSpeedA + 0.5*sweepLineWA;
     lineXA = lineXA%(width + sweepLineWA);
     lineXA -= 0.5*sweepLineWA;
@@ -252,7 +255,6 @@ void draw(){
     paramGraphicsB.background(127);
     paramGraphicsB.stroke(modB);
     paramGraphicsB.strokeWeight(sweepLineWB);
-    //lineXB = (width + sweepLineWB + (frameCount*sweepSpeedB)%(width + sweepLineWB))%(width + sweepLineWB) - 0.5*sweepLineWB;
     lineXB += sweepSpeedB + 0.5*sweepLineWB;
     lineXB = lineXB%(width + sweepLineWB);
     lineXB -= 0.5*sweepLineWB;
@@ -267,7 +269,6 @@ void draw(){
     paramGraphicsC.background(127);
     paramGraphicsC.stroke(modC);
     paramGraphicsC.strokeWeight(sweepLineWC);
-    //lineXC = (width + sweepLineWC + (frameCount*sweepSpeedC)%(width + sweepLineWC))%(width + sweepLineWC) - 0.5*sweepLineWC;
     lineXC += sweepSpeedC + 0.5*sweepLineWC;
     lineXC = lineXC%(width + sweepLineWC);
     lineXC -= 0.5*sweepLineWC;
@@ -284,7 +285,6 @@ void draw(){
     noiseModGraphics.background(modD);
     noiseModGraphics.stroke(255 - modD);
     noiseModGraphics.strokeWeight(sweepLineWD);
-    //lineXD = (width + sweepLineWD + (frameCount*sweepSpeedD)%(width + sweepLineWD))%(width + sweepLineWD) - 0.5*sweepLineWD;
     lineXD += sweepSpeedD + 0.5*sweepLineWD;
     lineXD = lineXD%(width + sweepLineWD);
     lineXD -= 0.5*sweepLineWD;
@@ -390,6 +390,8 @@ void draw(){
   shader.set("iTime", float(frameCount+12345));
   shader.set("xyBlend", xyBlend);
   shader.set("noiseBlend", noiseBlend);
+  shader.set("invert", invertSpins);
+  shader.set("quantNoise", quantizeNoise);
   
   // Draw spins
   //if (viewNoise){
@@ -397,6 +399,9 @@ void draw(){
   //} else {
   spinGraphics.beginDraw();
   spinGraphics.shader(shader);
+  if (invertSpins){
+    invertSpins = false;
+  }
   spinGraphics.fill(0);
   spinGraphics.rect(0, 0, width, height);
   spinGraphics.endDraw();
@@ -532,10 +537,11 @@ void keyPressed(){
     // Flip noise probability modulation
     xyToggle = !xyToggle;
   }
-  //if(key == 'Y' || key == 'y'){
-  //  // Flip noise probability modulation
-  //  viewNoise = !viewNoise;
-  //}
+  if(key == 'Y' || key == 'y'){
+    // Flip noise probability modulation
+    invertSpins = !invertSpins;
+     shader.set("spinTexture", spinGraphics);
+  }
   if(key == 'S' || key == 's'){
     // Screenshot
     saveFrame("screenshot.tiff");

@@ -39,37 +39,26 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
     else if (chan == 9) {
       sweepLineWD = map(val, 0, 127, 0, width);
     }
-    else if (chan == 10 && val == 127) {
+    else if (chan >= 10 && chan <=16 && val == 127) {
+      video.stop();
+      video.dispose();
+      video = new Movie(this, videoTitles[chan - 10]);
+      video.loop();
+    }
+    else if (chan == 37 && val == 127) {
       modA = 255 - modA;
     }
-    else if (chan == 11 && val == 127) {
+    else if (chan == 38 && val == 127) {
       modB = 255 - modB;
     }
-    else if (chan == 12 && val == 127) {
+    else if (chan == 39 && val == 127) {
       modC = 255 - modC;
     }
-    else if (chan == 13 && val == 127) {
+    else if (chan == 40 && val == 127) {
       modD = 255 - modD;
     }
-    else if (chan == 14 && val == 127) {
-      video = new Movie(this, "VCLP0150.avi");
-      video.loop();
-    }
-    else if (chan == 15 && val == 127) {
-      video = new Movie(this, "DSC_1789.mp4");
-      video.loop();
-    }
-    else if (chan == 16 && val == 127) {
-      video = new Movie(this, "grubbly.mp4");
-      video.loop();
-    }
-    else if (chan == 17 && val == 127) {
-      video = new Movie(this, "IMG_0138.mov");
-      video.loop();
-    }
-    else if (chan == 18 && val == 127) {
-      video = new Movie(this, "GlitchmanWalking.mp4");
-      video.loop();
+    else if (chan == 42 && val == 127) {
+      quantizeNoise = !quantizeNoise;
     }
   }
   else if (message.getStatus() == 144) // X1 toggle message
@@ -79,16 +68,16 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
       println("xyToggle: " + str(xyToggle));
     }
     else if (chan == 9) {
-      audioReact = !audioReact;
-      println("audioReact: " + str(audioReact));
+      scanToggle = !scanToggle;
+      println("scanToggle: " + str(scanToggle));
     }
     else if (chan == 10) {
       glyphOverlay = !glyphOverlay;
       println("glyphOverlay: " + str(glyphOverlay));
     }
     else if (chan == 11) {
-      scanToggle = !scanToggle;
-      println("scanToggle: " + str(scanToggle));
+      scannerCtrl = !scannerCtrl;
+      println("scannerCtrl: " + str(scannerCtrl));
     }
     else if (chan == 12) {
       //lineTextureParamCtrl = !lineTextureParamCtrl;
@@ -97,16 +86,20 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
       println("videoTextureParamControl: " + str(videoTextureParamControl));
     }
     else if (chan == 13) {
-      scannerCtrl = !scannerCtrl;
-      println("scannerCtrl: " + str(scannerCtrl));
+      scannerAdapt = !scannerAdapt;
+      println("scannerAdapt: " + str(scannerAdapt));
     }
     else if (chan == 14) {
       videoInvert = !videoInvert;
       println("videoInvert: " + str(videoInvert));
     }
     else if (chan == 15) {
-      scannerAdapt = !scannerAdapt;
-      println("scannerAdapt: " + str(scannerAdapt));
+      invertSpins = !invertSpins;
+      println("Spins inverted");
+    }
+    else if (chan == 17){
+      audioReact = !audioReact;
+      println("audioReact: " + str(audioReact));
     }
     else if (chan == 30) {
       glyphRepeatX = 1;
@@ -146,7 +139,8 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
       lvlThresh[0] = map(val, 0, 127, 0, 5);
     }
     else if (chan == 2) {
-      xyBlend = map(val, 0, 127, 0, 1);
+      //xyBlend = map(val, 0, 127, 0, 1);
+      shader.set("beta", exp(map(val, 0, 127, -10.0, 10.0)));
     }
     else if (chan == 3) {
       lvlThresh[1] = map(val, 0, 127, 0, 5);

@@ -30,9 +30,10 @@ uniform float field;
 uniform float interact;
 uniform float selDensity;
 uniform bool xyModelToggle;
-// uniform bool noiseToggle;
 uniform float xyBlend;
 uniform float noiseBlend;
+uniform bool invert;
+uniform bool quantNoise;
 
 #define PI 3.14159265358979323846
 
@@ -81,14 +82,9 @@ void main(){
 	float rndValUnit = float(rndVal.x ^ rndVal.y ^ rndVal.z) / 4294967295.0;
 	float spinProposal = mix(1 - spin, fract(tex + (2.0*rndValUnit - 1.0)*0.1), modelSelector);
 
-	// Translate texture into spin values (-1, 1)
-	// float spin = tex * 2. - 1.;
-	// float spinl = texl * 2. - 1.;
-	// float spinr = texr * 2. - 1.;
-	// float spint = text * 2. - 1.;
-	// float spinb = texb * 2. - 1.;
+	vec3 noiseVis = texture2D(noiseTexture1, st).xyz;
 
-	float sel = step(selDensity, texture2D(noiseTexture1, st).x);
+	float sel = step(selDensity, noiseVis.x);
 	float hold = hamiltonian(spin * scaleFactor, spinl * scaleFactor, spinr * scaleFactor, spint * scaleFactor, spinb * scaleFactor, interactMod, fieldMod);
 	float hnew = hamiltonian(spinProposal * scaleFactor, spinl * scaleFactor, spinr * scaleFactor, spint * scaleFactor, spinb * scaleFactor, interactMod, fieldMod);
 	float dH = hnew - hold;
@@ -97,11 +93,13 @@ void main(){
 	float noise = texture2D(noiseTexture2, st).x;
 	float newTex = mix(spin, spinProposal, step(noise, pacc)*sel*xyBlend);
 
-	// Blend noise
-	// newTex = mix(newTex, texture2D(noiseTexture2, st).x, noiseBlend);
+	vec3 newCol = mix(vec3(newTex), mix(noiseVis, step(0.5, noiseVis), quantNoise), noiseBlend);
+
+	// Invert colours
+	newCol = mix(newCol, 1.0 - newCol, float(invert));
 
 	// gl_FragColor = vec4(vec3(newTex, pacc, 0.5*dH+0.5), 1.);
-	gl_FragColor = vec4(mix(vec3(newTex), texture2D(noiseTexture1, st).xyz, noiseBlend), 1.0);
+	gl_FragColor = vec4(newCol, 1.0);
 	// gl_FragColor = vec4(vec3(rndValUnit), 1.0);
 	// gl_FragColor = vec4(vec3(step(pacc, noise) * sel), 1.);
 	// gl_FragColor = vec4(vec3(sel), 1.);

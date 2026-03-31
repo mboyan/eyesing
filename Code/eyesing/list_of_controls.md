@@ -40,7 +40,7 @@ modD - bool X \[F1 tap 4]
 
 ===AUDIO REACTIVITY===
 
-audioReact - bool X \[X1 Mode right]
+audioReact - bool X \[X1 browse knob push]
 
 lvlThreshA - float X \[X1 knob 1 right]
 
@@ -84,6 +84,8 @@ probModEdge2 - float X \[X1 knob 4 left]
 
 noiseBlend - float X \[X1 knob 1 left]
 
+quantizeNoise - bool X \[F1 small knob push]
+
 
 
 ===XY-MODEL===
@@ -91,4 +93,16 @@ noiseBlend - float X \[X1 knob 1 left]
 xyToggle - bool X \[X1 Mode left]
 
 xyBlend - float X \[X1 knob 2 left]
+
+
+
+===SIMULATION CONTROL===
+
+betaCtrl - float
+
+fieldCtrl - float
+
+interactCtrl - float
+
+invertSpins - bool X \[X1 Mode right]
 
