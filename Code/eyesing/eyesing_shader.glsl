@@ -69,6 +69,13 @@ void main(){
 	float text = texture2D(spinTexture, st + vec2(0., -1./iResolution.y)).x;
 	float texb = texture2D(spinTexture, st + vec2(0., 1./iResolution.y)).x;
 
+	// Convert to angles [0, PI]
+	float theta = acos(2.0*tex - 1.0);
+	float thetal = acos(2.0*texl - 1.0);
+	float thetar = acos(2.0*texr - 1.0);
+	float thetat = acos(2.0*text - 1.0);
+	float thetab = acos(2.0*texb - 1.0);
+
 	// Quantise if standard Ising model
 	float scaleFactor = mix(1, 2, modelSelector) * PI;
 	float spin = mix(step(0.5, tex), tex, modelSelector);
