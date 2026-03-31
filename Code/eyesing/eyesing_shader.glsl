@@ -33,6 +33,7 @@ uniform bool xyModelToggle;
 uniform float modelSelector;
 uniform float xyBlend;
 uniform float noiseBlend;
+uniform float perturbMag;
 
 #define PI 3.14159265358979323846
 
@@ -79,7 +80,7 @@ void main(){
 	// Compute new state proposal
 	uvec3 rndVal = pcg3d(uvec3(st*iResolution.xy, iTime));
 	float rndValUnit = float(rndVal.x ^ rndVal.y ^ rndVal.z) / 4294967295.0;
-	float spinProposal = mix(1 - spin, fract(tex + (2.0*rndValUnit - 1.0)*0.1), modelSelector);
+	float spinProposal = mix(1 - spin, fract(tex + (2.0*rndValUnit - 1.0)*perturbMag), modelSelector);
 
 	float sel = step(selDensity, texture2D(noiseTexture1, st).x);
 	float hold = hamiltonian(spin * scaleFactor, spinl * scaleFactor, spinr * scaleFactor, spint * scaleFactor, spinb * scaleFactor, interactMod, fieldMod);

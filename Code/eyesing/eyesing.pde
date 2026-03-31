@@ -50,15 +50,19 @@ float noiseBlend = 0.0;
 
 // Ising vs XY-model
 float modelSelector = 1.0;
+float modelSelectorPrev = modelSelector;
 float xyBlend = 1.0;
+float perturbMag = 0.1;
 
 // MIDI
 MidiBus f1Bus, x1Bus;
 
 // Periodic parameter modulation
-float modSpeed = 0.001;
+float modSpeed = 0.01;
 
 void setup(){
+  
+  pixelDensity(1);
   
   // Initialize MIDI
   MidiBus.list(); // List all available Midi devices on STDOUT. This will show each device's index and name.
@@ -102,6 +106,7 @@ void setup(){
   shader.set("modelSelector", modelSelector);
   shader.set("xyBlend", xyBlend);
   shader.set("noiseBlend", noiseBlend);
+  shader.set("perturbMag", perturbMag);
   
   //size(540, 540, P2D);
   //size(800, 800, P2D);
@@ -111,8 +116,8 @@ void setup(){
   //size(540, 810, P2D);
   //size(1080, 360, P2D);
   //size(1754, 1240, P2D); // A4 150dpi
-  //fullScreen(P2D, 2);
-  fullScreen(P2D);
+  fullScreen(P2D, 2);
+  //fullScreen(P2D);
   
   // Compute initial noise
   noiseGraphics.beginDraw();
@@ -197,9 +202,19 @@ void setup(){
 void draw(){
   
   // ===== Time-dependent parameters =====
-  modelSelector = max(min(cos(frameCount*modSpeed)*2 + 1.0, 1.0), 0.0);
+  //modelSelector = cos(frameCount*modSpeed)*2 + 1.0;
+  //noiseBlend = (modelSelector >= 1.0 && modelSelectorPrev < 1.0) ? random(1.0) : 0.0;
+  //if (modelSelector >= 1.0 && modelSelectorPrev < 1.0) println("Switched to XY-model");
+  //modelSelectorPrev = modelSelector;
+  //modelSelector = max(min(modelSelector, 1.0), 0.0);
+  //perturbMag = (8*frameCount*modSpeed-6*TWO_PI)%(8*TWO_PI);
+  //perturbMag = max(pow(perturbMag, 2)*(1-pow(perturbMag, 8)), 0.0)*100 + 0.1;
+  //println(perturbMag);
   //noiseBlend = max(pow(sin(frameCount*0.5*modSpeed - QUARTER_PI), 100) - 0.99, 0.0);
-  noiseBlend = pow(modSpeed, 5)*(1 - pow(modSpeed, 10));
+  //noiseBlend = max(min(cos(frameCount*modSpeed*0.5-0.2*PI)*2 + 1.0, 1.0), 0.0);
+  //noiseBlend = (8*frameCount*modSpeed-6*TWO_PI)%(8*TWO_PI);
+  //noiseBlend = max(pow(noiseBlend, 2)*(1 - pow(noiseBlend, 8)), 0.0);
+  
   
   // ===== Analyze sound =====
   if(frameCount == 30){
@@ -336,6 +351,7 @@ void draw(){
   shader.set("iTime", float(frameCount+12345));
   shader.set("xyBlend", xyBlend);
   shader.set("noiseBlend", noiseBlend);
+  shader.set("perturbMag", perturbMag);
   
   // Draw spins
   //if (viewNoise){
