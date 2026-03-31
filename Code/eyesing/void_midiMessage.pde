@@ -136,7 +136,7 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
       noiseBlend = map(val, 0, 127, 0, 1);
     }
     else if (chan == 1) {
-      lvlThresh[0] = map(val, 0, 127, 0, 5);
+      lvlThresh[bandShiftIdx] = map(val, 0, 127, 0, 5);
     }
     else if (chan == 2) {
       //xyBlend = map(val, 0, 127, 0, 1);
@@ -160,7 +160,7 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
       lvlThresh[3] = map(val, 0, 127, 0, 5);
     }
     else if (chan == 16) {
-      bandShiftIdx = (val == 127) ? (bandShiftIdx + 1)%4 : (4 + bandShiftIdx - 1) %4;
+      bandShiftIdx = (val == 127) ? (bandShiftIdx + 1)%4 : (4 + bandShiftIdx - 1)%4;
     }
   }
 }

@@ -61,6 +61,8 @@ MidiBus f1Bus, x1Bus;
 
 void setup(){
   
+  pixelDensity(1); // For Processing 4.5.2
+  
   // Initialize MIDI
   MidiBus.list(); // List all available Midi devices on STDOUT. This will show each device's index and name.
   f1Bus = new MidiBus();
