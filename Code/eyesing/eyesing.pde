@@ -36,7 +36,7 @@ boolean glyphOverlay = false;
 float glyphSeedA, glyphSeedB;
 float glyphRepeatX = 1;
 float glyphRepeatY = 1;
-int glyphTextureCtrlIdx = 0; // 0 for none, 1 for beta, 2 for field, 3 for interact
+int glyphTextureCtrlIdx = 3; // 0 for none, 1 for beta, 2 for field, 3 for interact
 
 // Video reading
 Movie video;
@@ -134,7 +134,7 @@ void setup(){
     hist[i] = 0;
   }
   
-  //frameRate(0.1);
+  //frameRate(1);
   
   // Create and turn on scanner
   screenScanner = new ScreenScanner(width*0.5, height*0.5, width*0.25, 100);
@@ -150,7 +150,7 @@ void setup(){
   sweepLineWA = 10;
   sweepLineWB = 20;
   sweepLineWC = 30;
-  sweepLineWD = 0;
+  sweepLineWD = width;
   modA = 0;
   modB = 0;
   modC = 0;
@@ -202,11 +202,11 @@ void setup(){
 void draw(){
   
   // ===== Time-dependent parameters =====
-  //modelSelector = cos(frameCount*modSpeed)*2 + 1.0;
+  modelSelector = cos(frameCount*modSpeed)*2 + 1.0;
   //noiseBlend = (modelSelector >= 1.0 && modelSelectorPrev < 1.0) ? random(1.0) : 0.0;
   //if (modelSelector >= 1.0 && modelSelectorPrev < 1.0) println("Switched to XY-model");
   //modelSelectorPrev = modelSelector;
-  //modelSelector = max(min(modelSelector, 1.0), 0.0);
+  modelSelector = max(min(modelSelector, 1.0), 0.0);
   //perturbMag = (8*frameCount*modSpeed-6*TWO_PI)%(8*TWO_PI);
   //perturbMag = max(pow(perturbMag, 2)*(1-pow(perturbMag, 8)), 0.0)*100 + 0.1;
   //println(perturbMag);
