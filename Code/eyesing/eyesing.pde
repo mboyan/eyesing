@@ -4,8 +4,8 @@ import processing.video.*;
 import themidibus.*;
 import javax.sound.midi.MidiMessage;
 
-PShader shader, noiseShader, glyphShaderTexCtrl, glyphShaderOverlay;
-PGraphics spinGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC, glyphGraphicsTexCtrl, glyphGraphicsOverlay, noiseModGraphics;
+PShader shader, visShader, noiseShader, glyphShaderTexCtrl, glyphShaderOverlay;
+PGraphics spinGraphics, visGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC, glyphGraphicsTexCtrl, glyphGraphicsOverlay, noiseModGraphics;
 
 float[] hist;
 
@@ -36,7 +36,7 @@ boolean glyphOverlay = false;
 float glyphSeedA, glyphSeedB;
 float glyphRepeatX = 1;
 float glyphRepeatY = 1;
-int glyphTextureCtrlIdx = 3; // 0 for none, 1 for beta, 2 for field, 3 for interact
+int glyphTextureCtrlIdx = 0; // 0 for none, 1 for beta, 2 for field, 3 for interact
 
 // Video reading
 Movie video;
@@ -49,7 +49,7 @@ float probModEdge1, probModEdge2;
 float noiseBlend = 0.0;
 
 // Ising vs XY-model
-float modelSelector = 1.0;
+float modelSelector = 0.0;
 float modelSelectorPrev = modelSelector;
 float xyBlend = 1.0;
 float perturbMag = 0.1;
@@ -82,6 +82,7 @@ void setup(){
   
   // PGraphics objects
   spinGraphics = createGraphics(width, height, P2D);
+  visGraphics = createGraphics(width, height, P2D);
   noiseGraphics = createGraphics(width, height, P2D);
   paramGraphicsA = createGraphics(width, height, P2D);
   paramGraphicsB = createGraphics(width, height, P2D);
@@ -107,6 +108,9 @@ void setup(){
   shader.set("xyBlend", xyBlend);
   shader.set("noiseBlend", noiseBlend);
   shader.set("perturbMag", perturbMag);
+  
+  visShader = loadShader("visualise_shader.glsl");
+  visShader.set("iResolution", float(width), float(height), 0.0);
   
   //size(540, 540, P2D);
   //size(800, 800, P2D);
@@ -134,7 +138,7 @@ void setup(){
     hist[i] = 0;
   }
   
-  //frameRate(1);
+  frameRate(1);
   
   // Create and turn on scanner
   screenScanner = new ScreenScanner(width*0.5, height*0.5, width*0.25, 100);
@@ -202,11 +206,11 @@ void setup(){
 void draw(){
   
   // ===== Time-dependent parameters =====
-  modelSelector = cos(frameCount*modSpeed)*2 + 1.0;
+  //modelSelector = cos(frameCount*modSpeed)*2 + 1.0;
   //noiseBlend = (modelSelector >= 1.0 && modelSelectorPrev < 1.0) ? random(1.0) : 0.0;
   //if (modelSelector >= 1.0 && modelSelectorPrev < 1.0) println("Switched to XY-model");
   //modelSelectorPrev = modelSelector;
-  modelSelector = max(min(modelSelector, 1.0), 0.0);
+  //modelSelector = max(min(modelSelector, 1.0), 0.0);
   //perturbMag = (8*frameCount*modSpeed-6*TWO_PI)%(8*TWO_PI);
   //perturbMag = max(pow(perturbMag, 2)*(1-pow(perturbMag, 8)), 0.0)*100 + 0.1;
   //println(perturbMag);
@@ -362,7 +366,16 @@ void draw(){
   spinGraphics.fill(0);
   spinGraphics.rect(0, 0, width, height);
   spinGraphics.endDraw();
-  image(spinGraphics, 0, 0);
+  //image(spinGraphics, 0, 0);
+  
+  // Draw spins (without theta signs)
+  visShader.set("iTexture", spinGraphics);
+  visGraphics.beginDraw();
+  visGraphics.shader(visShader);
+  visGraphics.fill(0);
+  visGraphics.rect(0, 0, width, height);
+  visGraphics.endDraw();
+  image(visGraphics, 0, 0);
   //}
   
   // Feed spin image back to shader
