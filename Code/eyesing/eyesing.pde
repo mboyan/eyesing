@@ -5,7 +5,7 @@ import themidibus.*;
 import javax.sound.midi.MidiMessage;
 
 PShader shader, visShader, noiseShader, glyphShaderTexCtrl, glyphShaderOverlay;
-PGraphics spinGraphics, visGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC, glyphGraphicsTexCtrl, glyphGraphicsOverlay, noiseModGraphics;
+PGraphics spinGraphics, visGraphics, initGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC, glyphGraphicsTexCtrl, glyphGraphicsOverlay, noiseModGraphics;
 
 float[] hist;
 
@@ -49,9 +49,8 @@ float probModEdge1, probModEdge2;
 float noiseBlend = 0.0;
 
 // Ising vs XY-model
-float modelSelector = 0.0;
+float modelSelector = 1.0;
 float modelSelectorPrev = modelSelector;
-float xyBlend = 1.0;
 float perturbMag = 0.1;
 
 // MIDI
@@ -82,6 +81,7 @@ void setup(){
   
   // PGraphics objects
   spinGraphics = createGraphics(width, height, P2D);
+  initGraphics = createGraphics(width, height, P2D);
   visGraphics = createGraphics(width, height, P2D);
   noiseGraphics = createGraphics(width, height, P2D);
   paramGraphicsA = createGraphics(width, height, P2D);
@@ -105,7 +105,6 @@ void setup(){
   shader.set("interact", 0.25);
   shader.set("selDensity", exp(-0.1));
   shader.set("modelSelector", modelSelector);
-  shader.set("xyBlend", xyBlend);
   shader.set("noiseBlend", noiseBlend);
   shader.set("perturbMag", perturbMag);
   
@@ -123,15 +122,19 @@ void setup(){
   fullScreen(P2D, 2);
   //fullScreen(P2D);
   
+  inputImg = loadImage("rnkic_intro.jpg");
+  //inputImg.filter(INVERT);
+  
   // Compute initial noise
-  noiseGraphics.beginDraw();
-  noiseGraphics.shader(noiseShader);
-  noiseGraphics.fill(0);
-  noiseGraphics.rect(0, 0, width, height);
-  noiseGraphics.endDraw();
+  initGraphics.beginDraw();
+  initGraphics.shader(noiseShader);
+  initGraphics.fill(0);
+  initGraphics.rect(0, 0, width, height);
+  initGraphics.endDraw();
   
   // Pass initial spin state
-  shader.set("spinTexture", noiseGraphics);
+  //shader.set("spinTexture", noiseGraphics);
+  shader.set("spinTexture", initGraphics);
   
   hist = new float[width];
   for (int i = 0; i < hist.length; i++){
@@ -150,11 +153,11 @@ void setup(){
   sweepSpeedA = 1;
   sweepSpeedB = -10;
   sweepSpeedC = -5;
-  sweepSpeedD = 1;
-  sweepLineWA = 10;
-  sweepLineWB = 20;
-  sweepLineWC = 30;
-  sweepLineWD = width;
+  sweepSpeedD = 0;
+  sweepLineWA = 0;
+  sweepLineWB = 0;
+  sweepLineWC = 0;
+  sweepLineWD = 0;//width;
   modA = 0;
   modB = 0;
   modC = 0;
@@ -193,9 +196,6 @@ void setup(){
   //video = new Movie(this, "GlitchmanWalking.mp4");
   //video = new Movie(this, "cymatique_edited.mp4");
   video.loop();
-  
-  inputImg = loadImage("rnkic_intro.jpg");
-  //inputImg.filter(INVERT);
   
   // Noise probability modulation
   probModEdge1 = 0.25;
@@ -337,15 +337,6 @@ void draw(){
       shader.set("paramTextureInteract", paramGraphicsC);
     }
   }
-  //shader.set("spinTexture", spinGraphics);
-  
-  // Update processing shader
-  //shader.set("iTime", float(frameCount));
-  
-  //shader(shader);
-  ////image(noiseGraphics, 0, 0);
-  //fill(0);
-  //rect(0, 0, width, height);
   
   // ===========================
   // MAIN PATTERN
@@ -353,14 +344,10 @@ void draw(){
   
   shader.set("modelSelector", modelSelector);
   shader.set("iTime", float(frameCount+12345));
-  shader.set("xyBlend", xyBlend);
   shader.set("noiseBlend", noiseBlend);
   shader.set("perturbMag", perturbMag);
   
   // Draw spins
-  //if (viewNoise){
-  //  image(noiseGraphics, 0, 0);
-  //} else {
   spinGraphics.beginDraw();
   spinGraphics.shader(shader);
   spinGraphics.fill(0);
@@ -376,10 +363,9 @@ void draw(){
   visGraphics.rect(0, 0, width, height);
   visGraphics.endDraw();
   image(visGraphics, 0, 0);
-  //}
   
   // Feed spin image back to shader
-  shader.set("spinTexture", spinGraphics);
+  //shader.set("spinTexture", spinGraphics);
   
   // Plot histogram
   loadPixels();
@@ -417,20 +403,10 @@ void draw(){
     blendMode(BLEND);
   }
   
-  //rectMode(CORNER);
-  //shader(glyphShader);
-  //fill(0);
-  //rect(0, 0, width, height);
-  
   // Crosshair
   if(scanToggle){
     
     bSampleA = screenScanner.scan();
-    //fill(255, 0, 0);
-    //textSize(50);
-    //text(str(bSampleA), 50, 50);
-    //text(str(screenScanner.pos.z), 50, 120);
-    
     screenScanner.updatePos();
     
     // Flicker bands

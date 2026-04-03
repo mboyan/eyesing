@@ -146,7 +146,7 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
       lvlThresh[0] = map(val, 0, 127, 0, 5);
     }
     else if (chan == 2) {
-      xyBlend = map(val, 0, 127, 0, 1);
+      //xyBlend = map(val, 0, 127, 0, 1);
     }
     else if (chan == 3) {
       lvlThresh[1] = map(val, 0, 127, 0, 5);

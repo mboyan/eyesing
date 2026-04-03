@@ -31,7 +31,6 @@ uniform float interact;
 uniform float selDensity;
 uniform bool xyModelToggle;
 uniform float modelSelector;
-uniform float xyBlend;
 uniform float noiseBlend;
 uniform float perturbMag;
 
@@ -97,12 +96,14 @@ void main(){
 
 	float pacc = min(exp(-dH * betaMod), 1.0);
 	float noise = texture2D(noiseTexture2, st).x;
-	float selNxt = step(noise, pacc)*sel*xyBlend;
+	float selNxt = step(noise, pacc)*sel;
 	vec2 newTex = vec2(mix((spin + 1.0) * 0.5, spinProposal, selNxt), mix(tex.y, (sign(thetaProposal) + 1.0) * 0.5, selNxt));
 
 	// gl_FragColor = vec4(vec3(newTex, pacc, 0.5*dH+0.5), 1.);
-	// gl_FragColor = vec4(mix(newTex.xyx, texture2D(noiseTexture1, st).xyz, noiseBlend), 1.0); // Blend noise
-	gl_FragColor = vec4(vec3(spinProposal), 1.0);
+	gl_FragColor = vec4(mix(newTex.xyx, texture2D(noiseTexture1, st).xyz, noiseBlend), 1.0); // Blend noise
+	// gl_FragColor = vec4(vec3(spinProposal) - vec3(spin), 1.0);
+	// gl_FragColor = vec4(tex.xyx, 1.0);
+	// gl_FragColor = texture2D(spinTexture, st);
 	// gl_FragColor = vec4(vec3(step(pacc, noise) * sel), 1.);
 	// gl_FragColor = vec4(vec3(sel), 1.);
 	// gl_FragColor = vec4(vec3(tex-texl-texr-text-texb), 1.);
