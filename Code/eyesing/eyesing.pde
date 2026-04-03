@@ -4,10 +4,10 @@ import processing.video.*;
 import themidibus.*;
 import javax.sound.midi.MidiMessage;
 
-PShader shader, noiseShader, glyphShaderTexCtrl, glyphShaderOverlay;
-PGraphics spinGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC, glyphGraphicsTexCtrl, glyphGraphicsOverlay, noiseModGraphics;
+PShader shader, noiseShader, glyphShaderTexCtrlA, glyphShaderTexCtrlB, glyphShaderTexCtrlC, glyphShaderOverlay;
+PGraphics spinGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC, glyphGraphicsTexCtrlA, glyphGraphicsTexCtrlB, glyphGraphicsTexCtrlC, noiseModGraphics;
 
-float[] hist;
+//float[] hist;
 
 // Scanner variables
 ScreenScanner screenScanner;
@@ -22,21 +22,11 @@ float modA, modB, modC, modD;
 
 float penalty;
 
-// Audio reactivity
-Minim minim;
-FFT fft;
-AudioPlayer in;
-boolean audioReact = false;
-float[] bands;
-int bandShiftIdx;
-float[] lvlThresh = {2.0, 0.5, 0.25, 0.125};
-
 // WPF glyph controls
 boolean glyphOverlay = false;
 float glyphSeedA, glyphSeedB;
-float glyphRepeatX = 1;
-float glyphRepeatY = 1;
 int glyphTextureCtrlIdx = 3; // 0 for none, 1 for beta, 2 for field, 3 for interact
+float glyphTexCtrlA, glyphTexCtrlB, glyphTexCtrlC;
 
 // Video reading
 Movie video;
@@ -58,7 +48,10 @@ float perturbMag = 0.1;
 MidiBus f1Bus, x1Bus;
 
 // Periodic parameter modulation
-float modSpeed = 0.01;
+float modeChangeSpeed = 0.001;
+float glyphModSpeedA = 0.003;
+float glyphModSpeedB = 0.005;
+float glyphModSpeedC = 0.007;
 
 void setup(){
   
@@ -73,21 +66,15 @@ void setup(){
   x1Bus.registerParent(this);
   x1Bus.addInput(2);
   
-  // Initialize minim and track
-  minim = new Minim(this);
-  in = minim.loadFile("260327_eyesing_demo_soundtrack.mp3", 1024); // change to mic input when needed
-  fft = new FFT(in.bufferSize(), in.sampleRate());
-  bands = new float[4];
-  bandShiftIdx = 0;
-  
   // PGraphics objects
   spinGraphics = createGraphics(width, height, P2D);
   noiseGraphics = createGraphics(width, height, P2D);
   paramGraphicsA = createGraphics(width, height, P2D);
   paramGraphicsB = createGraphics(width, height, P2D);
   paramGraphicsC = createGraphics(width, height, P2D);
-  glyphGraphicsTexCtrl = createGraphics(width, height, P2D);
-  glyphGraphicsOverlay = createGraphics(width, height, P2D);
+  glyphGraphicsTexCtrlA = createGraphics(width, height, P2D);
+  glyphGraphicsTexCtrlB = createGraphics(width, height, P2D);
+  glyphGraphicsTexCtrlC = createGraphics(width, height, P2D);
   noiseModGraphics = createGraphics(width, height, P2D);
   
   // Initialize noise shader
@@ -129,10 +116,10 @@ void setup(){
   // Pass initial spin state
   shader.set("spinTexture", noiseGraphics);
   
-  hist = new float[width];
-  for (int i = 0; i < hist.length; i++){
-    hist[i] = 0;
-  }
+  //hist = new float[width];
+  //for (int i = 0; i < hist.length; i++){
+  //  hist[i] = 0;
+  //}
   
   //frameRate(1);
   
@@ -174,12 +161,24 @@ void setup(){
   noiseModGraphics.endDraw();
   
   // Initialize glyph shader
-  glyphShaderTexCtrl = loadShader("glyph_shader.glsl");
-  glyphShaderOverlay = loadShader("glyph_shader.glsl");
-  glyphShaderTexCtrl.set("iResolution", float(width), float(height), 0.0);
-  glyphShaderTexCtrl.set("iContrast", 0.5);
-  glyphShaderOverlay.set("iResolution", float(width), float(height), 0.0);
-  glyphShaderOverlay.set("iContrast", 1.0);
+  glyphTexCtrlA = 0.0;
+  glyphTexCtrlB = 0.0;
+  glyphTexCtrlC = 0.0;
+  glyphShaderTexCtrlA = loadShader("glyph_shader.glsl");
+  //glyphShaderOverlay = loadShader("glyph_shader.glsl");
+  glyphShaderTexCtrlA.set("iResolution", float(width), float(height), 0.0);
+  glyphShaderTexCtrlA.set("iContrast", glyphTexCtrlA);
+  glyphShaderTexCtrlA.set("iRepeat", 1, 1);
+  //glyphShaderOverlay.set("iResolution", float(width), float(height), 0.0);
+  //glyphShaderOverlay.set("iContrast", 1.0);
+  glyphShaderTexCtrlB = loadShader("glyph_shader.glsl");
+  glyphShaderTexCtrlB.set("iResolution", float(width), float(height), 0.0);
+  glyphShaderTexCtrlB.set("iContrast", glyphTexCtrlB);
+  glyphShaderTexCtrlB.set("iRepeat", 1, 1);
+  glyphShaderTexCtrlC = loadShader("glyph_shader.glsl");
+  glyphShaderTexCtrlC.set("iResolution", float(width), float(height), 0.0);
+  glyphShaderTexCtrlC.set("iContrast", glyphTexCtrlC);
+  glyphShaderTexCtrlC.set("iRepeat", 1, 1);
   
   // Video input
   //video = new Movie(this, "VCLP0150.avi");
@@ -195,64 +194,21 @@ void setup(){
   
   // Noise probability modulation
   probModEdge1 = 0.25;
-  probModEdge2 = sqrt(2)*0.4;
+  probModEdge2 = sqrt(2)*0.3;
 }
 
 
 void draw(){
   
   // ===== Time-dependent parameters =====
-  modelSelector = cos(frameCount*modSpeed)*2 + 1.0;
-  //noiseBlend = (modelSelector >= 1.0 && modelSelectorPrev < 1.0) ? random(1.0) : 0.0;
-  //if (modelSelector >= 1.0 && modelSelectorPrev < 1.0) println("Switched to XY-model");
-  //modelSelectorPrev = modelSelector;
+  modelSelector = cos(frameCount*modeChangeSpeed)*2 + 1.0;
   modelSelector = max(min(modelSelector, 1.0), 0.0);
-  //perturbMag = (8*frameCount*modSpeed-6*TWO_PI)%(8*TWO_PI);
-  //perturbMag = max(pow(perturbMag, 2)*(1-pow(perturbMag, 8)), 0.0)*100 + 0.1;
-  //println(perturbMag);
-  //noiseBlend = max(pow(sin(frameCount*0.5*modSpeed - QUARTER_PI), 100) - 0.99, 0.0);
-  //noiseBlend = max(min(cos(frameCount*modSpeed*0.5-0.2*PI)*2 + 1.0, 1.0), 0.0);
-  //noiseBlend = (8*frameCount*modSpeed-6*TWO_PI)%(8*TWO_PI);
-  //noiseBlend = max(pow(noiseBlend, 2)*(1 - pow(noiseBlend, 8)), 0.0);
+  xyBlend = 1.0 - pow(max(cos(frameCount*modeChangeSpeed + QUARTER_PI), 0.0), 6);
   
-  
-  // ===== Analyze sound =====
-  if(frameCount == 30){
-    //in.play();
-    //sweepLineWD = width;
-  }
-  if(audioReact){
-    fft.forward(in.left);
-    
-    // Get low freqs
-    bands[bandShiftIdx] = 0;
-    for(int i = 0; i < fft.specSize()*0.25; i++){
-      bands[bandShiftIdx] += fft.getBand(i);
-    }
-    bands[bandShiftIdx] /= fft.specSize()*0.25;
-    
-    // Get mid A freqs
-    bands[(bandShiftIdx+1)%4] = 0;
-    for(int i = int(fft.specSize()*0.25); i < fft.specSize()*0.5; i++){
-      bands[(bandShiftIdx+1)%4] += fft.getBand(i);
-    }
-    bands[(bandShiftIdx+1)%4] /= fft.specSize()*0.25;
-    
-    // Get mid B freqs
-    bands[(bandShiftIdx+2)%4] = 0;
-    for(int i = int(fft.specSize()*0.5); i < fft.specSize()*0.75; i++){
-      bands[(bandShiftIdx+2)%4] += fft.getBand(i);
-    }
-    bands[(bandShiftIdx+2)%4] /= fft.specSize()*0.25;
-    
-    // Get high freqs
-    bands[(bandShiftIdx+3)%4] = 0;
-    for(int i = int(fft.specSize()*0.75); i < fft.specSize(); i++){
-      bands[(bandShiftIdx+3)%4] += fft.getBand(i);
-    }
-    bands[(bandShiftIdx+3)%4] /= fft.specSize()*0.25;
-  }
-  
+  glyphTexCtrlA = cos(frameCount*glyphModSpeedA + PI)*0.25 + 0.5;
+  glyphTexCtrlB = cos(frameCount*glyphModSpeedB + PI)*0.25 + 0.5;
+  glyphTexCtrlC = cos(frameCount*glyphModSpeedC + PI)*0.25 + 0.5;
+   
   // ===== Assign patterns =====
   
   // Update noise shader
@@ -284,25 +240,36 @@ void draw(){
   shader.set("noiseTexture2", noiseGraphics);
   
   // Compute glyph texture
-  if (glyphTextureCtrlIdx > 0 || glyphOverlay){
-    noiseSeed(13);
-    glyphSeedA = 2.0*noise(frameCount*0.002);
-    noiseSeed(24);
-    glyphSeedB = 2.0*noise(frameCount*0.002);
-    
-    glyphShaderTexCtrl.set("iSeedA", glyphSeedA);
-    glyphShaderTexCtrl.set("iSeedB", glyphSeedB);
-    glyphShaderTexCtrl.set("iRepeat", glyphRepeatX, glyphRepeatY);
-    glyphShaderOverlay.set("iSeedA", glyphSeedA);
-    glyphShaderOverlay.set("iSeedB", glyphSeedB);
-    glyphShaderOverlay.set("iRepeat", glyphRepeatX, glyphRepeatY);
-    
-    glyphGraphicsTexCtrl.beginDraw();
-    glyphGraphicsTexCtrl.shader(glyphShaderTexCtrl);
-    glyphGraphicsTexCtrl.fill(0);
-    glyphGraphicsTexCtrl.rect(0, 0, width, height);
-    glyphGraphicsTexCtrl.endDraw();
-  }
+  //if (glyphTextureCtrlIdx > 0 || glyphOverlay){
+  noiseSeed(13);
+  glyphSeedA = 2.0*noise(frameCount*0.002);
+  noiseSeed(24);
+  glyphSeedB = 2.0*noise(frameCount*0.002);
+  
+  glyphShaderTexCtrlA.set("iSeedA", glyphSeedA);
+  glyphShaderTexCtrlA.set("iSeedB", glyphSeedB);
+  //glyphShaderOverlay.set("iSeedA", glyphSeedA);
+  //glyphShaderOverlay.set("iSeedB", glyphSeedB);
+  //glyphShaderOverlay.set("iRepeat", glyphRepeatX, glyphRepeatY);
+  
+  glyphGraphicsTexCtrlA.beginDraw();
+  glyphGraphicsTexCtrlA.shader(glyphShaderTexCtrlA);
+  glyphGraphicsTexCtrlA.fill(0);
+  glyphGraphicsTexCtrlA.rect(0, 0, width, height);
+  glyphGraphicsTexCtrlA.endDraw();
+  
+  glyphGraphicsTexCtrlB.beginDraw();
+  glyphGraphicsTexCtrlB.shader(glyphShaderTexCtrlB);
+  glyphGraphicsTexCtrlB.fill(0);
+  glyphGraphicsTexCtrlB.rect(0, 0, width, height);
+  glyphGraphicsTexCtrlB.endDraw();
+  
+  glyphGraphicsTexCtrlC.beginDraw();
+  glyphGraphicsTexCtrlC.shader(glyphShaderTexCtrlC);
+  glyphGraphicsTexCtrlC.fill(0);
+  glyphGraphicsTexCtrlC.rect(0, 0, width, height);
+  glyphGraphicsTexCtrlC.endDraw();
+  //}
   
   // Pass parameter textures
   if (videoTextureParamControl && video.available() == true){
@@ -317,21 +284,21 @@ void draw(){
     //shader.set("paramTextureField", inputImg);
     //shader.set("paramTextureInteract", inputImg);
   } else {
-    if (glyphTextureCtrlIdx == 1){
-      shader.set("paramTextureBeta", glyphGraphicsTexCtrl);
-    } else {
-      shader.set("paramTextureBeta", paramGraphicsA);
-    }
-    if (glyphTextureCtrlIdx == 2){
-      shader.set("paramTextureField", glyphGraphicsTexCtrl);
-    } else {
-      shader.set("paramTextureField", paramGraphicsB);
-    }
-    if (glyphTextureCtrlIdx == 3){
-      shader.set("paramTextureInteract", glyphGraphicsTexCtrl);
-    } else {
-      shader.set("paramTextureInteract", paramGraphicsC);
-    }
+    //if (glyphTextureCtrlIdx == 1){
+    shader.set("paramTextureBeta", glyphGraphicsTexCtrlA);
+    //} else {
+    //  shader.set("paramTextureBeta", paramGraphicsA);
+    //}
+    //if (glyphTextureCtrlIdx == 2){
+    shader.set("paramTextureField", glyphGraphicsTexCtrlB);
+    //} else {
+    //  shader.set("paramTextureField", paramGraphicsB);
+    //}
+    //if (glyphTextureCtrlIdx == 3){
+    shader.set("paramTextureInteract", glyphGraphicsTexCtrlC);
+    //} else {
+    //  shader.set("paramTextureInteract", paramGraphicsC);
+    //}
   }
   //shader.set("spinTexture", spinGraphics);
   
@@ -354,35 +321,31 @@ void draw(){
   shader.set("perturbMag", perturbMag);
   
   // Draw spins
-  //if (viewNoise){
-  //  image(noiseGraphics, 0, 0);
-  //} else {
   spinGraphics.beginDraw();
   spinGraphics.shader(shader);
   spinGraphics.fill(0);
   spinGraphics.rect(0, 0, width, height);
   spinGraphics.endDraw();
   image(spinGraphics, 0, 0);
-  //}
   
   // Feed spin image back to shader
   shader.set("spinTexture", spinGraphics);
   
   // Plot histogram
-  loadPixels();
-  for (int i = 0; i < pixels.length; i++){
-    float pixelVal = brightness(pixels[i]);
-    int binIdx = int((width - 1) * pixelVal / 255.0);
-    hist[binIdx] += 0.1;
-  }
-  stroke(255, 0, 0);
-  for (int i = 0; i < hist.length; i++){
-    line(i, 0, i, hist[i]);
-  }
-  updatePixels();
-  for (int i = 0; i < hist.length; i++){
-    hist[i] = 0;
-  }
+  //loadPixels();
+  //for (int i = 0; i < pixels.length; i++){
+  //  float pixelVal = brightness(pixels[i]);
+  //  int binIdx = int((width - 1) * pixelVal / 255.0);
+  //  hist[binIdx] += 0.1;
+  //}
+  //stroke(255, 0, 0);
+  //for (int i = 0; i < hist.length; i++){
+  //  line(i, 0, i, hist[i]);
+  //}
+  //updatePixels();
+  //for (int i = 0; i < hist.length; i++){
+  //  hist[i] = 0;
+  //}
   
   //if(frameCount < 30){
   //  saveFrame();
@@ -393,16 +356,16 @@ void draw(){
   // ===========================
   
   // Glyph overlay
-  if (glyphOverlay){
-    glyphGraphicsOverlay.beginDraw();
-    glyphGraphicsOverlay.shader(glyphShaderOverlay);
-    glyphGraphicsOverlay.fill(0);
-    glyphGraphicsOverlay.rect(0, 0, width, height);
-    glyphGraphicsOverlay.endDraw();
-    blendMode(MULTIPLY);
-    image(glyphGraphicsOverlay, 0, 0);
-    blendMode(BLEND);
-  }
+  //if (glyphOverlay){
+  //  glyphGraphicsOverlay.beginDraw();
+  //  glyphGraphicsOverlay.shader(glyphShaderOverlay);
+  //  glyphGraphicsOverlay.fill(0);
+  //  glyphGraphicsOverlay.rect(0, 0, width, height);
+  //  glyphGraphicsOverlay.endDraw();
+  //  blendMode(MULTIPLY);
+  //  image(glyphGraphicsOverlay, 0, 0);
+  //  blendMode(BLEND);
+  //}
   
   //rectMode(CORNER);
   //shader(glyphShader);
@@ -419,29 +382,6 @@ void draw(){
     //text(str(screenScanner.pos.z), 50, 120);
     
     screenScanner.updatePos();
-    
-    // Flicker bands
-    if(audioReact){
-      fill(0);
-      noStroke();
-      rectMode(CORNER);
-      if(bands[0] < lvlThresh[0]){
-        rect(screenScanner.pos.x + screenScanner.winSize*0.5, screenScanner.pos.y, width, height);
-        rect(screenScanner.pos.x, screenScanner.pos.y + screenScanner.winSize*0.5, width, height);
-      }
-      if(bands[1] < lvlThresh[1]){
-        rect(screenScanner.pos.x + screenScanner.winSize*0.5, screenScanner.pos.y, width, -height);
-        rect(screenScanner.pos.x, screenScanner.pos.y - screenScanner.winSize*0.5, width, -height);
-      }
-      if(bands[2] < lvlThresh[2]){
-        rect(screenScanner.pos.x - screenScanner.winSize*0.5, screenScanner.pos.y, -width, height);
-        rect(screenScanner.pos.x, screenScanner.pos.y + screenScanner.winSize*0.5, -width, height);
-      }
-      if(bands[3] < lvlThresh[3]){
-        rect(screenScanner.pos.x - screenScanner.winSize*0.5, screenScanner.pos.y, -width, -height);
-        rect(screenScanner.pos.x, screenScanner.pos.y - screenScanner.winSize*0.5, -width, -height);
-      }
-    }
     screenScanner.show();
     
     // Adapt scanner motion
@@ -589,20 +529,20 @@ void keyPressed(){
   //  glyphRepeatY = 25;
   //}
   // FOR PROJECTOR RESOLUTION
-  if(key == '0'){
-    glyphRepeatX = 1;
-    glyphRepeatY = 1;
-  }
-  if(key == '1'){
-    glyphRepeatX = 16;
-    glyphRepeatY = 9;
-  }
-  if(key == '2'){
-    glyphRepeatX = 32;
-    glyphRepeatY = 18;
-  }
-  if(key == '3'){
-    glyphRepeatX = 64;
-    glyphRepeatY = 32;
-  }
+  //if(key == '0'){
+  //  glyphRepeatX = 1;
+  //  glyphRepeatY = 1;
+  //}
+  //if(key == '1'){
+  //  glyphRepeatX = 16;
+  //  glyphRepeatY = 9;
+  //}
+  //if(key == '2'){
+  //  glyphRepeatX = 32;
+  //  glyphRepeatY = 18;
+  //}
+  //if(key == '3'){
+  //  glyphRepeatX = 64;
+  //  glyphRepeatY = 32;
+  //}
 }

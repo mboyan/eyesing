@@ -79,8 +79,8 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
       //println("xyToggle: " + str(xyToggle));
     }
     else if (chan == 9) {
-      audioReact = !audioReact;
-      println("audioReact: " + str(audioReact));
+      //audioReact = !audioReact;
+      //println("audioReact: " + str(audioReact));
     }
     else if (chan == 10) {
       glyphOverlay = !glyphOverlay;
@@ -108,31 +108,31 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
       scannerAdapt = !scannerAdapt;
       println("scannerAdapt: " + str(scannerAdapt));
     }
-    else if (chan == 30) {
-      glyphRepeatX = 1;
-      glyphRepeatY = 1;
-    }
-    else if (chan == 31) {
-      glyphTextureCtrlIdx = 0;
-    }
-    else if (chan == 32) {
-      glyphRepeatX = 16;
-      glyphRepeatY = 9;
-    }
-    else if (chan == 33) {
-      glyphTextureCtrlIdx = 1;
-    }
-    else if (chan == 34) {
-      glyphRepeatX = 32;
-      glyphRepeatY = 18;
-    }
-    else if (chan == 35) {
-      glyphTextureCtrlIdx = 2;
-    }
-    else if (chan == 36) {
-      glyphRepeatX = 64;
-      glyphRepeatY = 32;
-    }
+    //else if (chan == 30) {
+    //  glyphRepeatX = 1;
+    //  glyphRepeatY = 1;
+    //}
+    //else if (chan == 31) {
+    //  glyphTextureCtrlIdx = 0;
+    //}
+    //else if (chan == 32) {
+    //  glyphRepeatX = 16;
+    //  glyphRepeatY = 9;
+    //}
+    //else if (chan == 33) {
+    //  glyphTextureCtrlIdx = 1;
+    //}
+    //else if (chan == 34) {
+    //  glyphRepeatX = 32;
+    //  glyphRepeatY = 18;
+    //}
+    //else if (chan == 35) {
+    //  glyphTextureCtrlIdx = 2;
+    //}
+    //else if (chan == 36) {
+    //  glyphRepeatX = 64;
+    //  glyphRepeatY = 32;
+    //}
     else if (chan == 37) {
       glyphTextureCtrlIdx = 3;
     }
@@ -143,30 +143,30 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
       noiseBlend = map(val, 0, 127, 0, 1);
     }
     else if (chan == 1) {
-      lvlThresh[0] = map(val, 0, 127, 0, 5);
+      //lvlThresh[0] = map(val, 0, 127, 0, 5);
     }
     else if (chan == 2) {
       xyBlend = map(val, 0, 127, 0, 1);
     }
     else if (chan == 3) {
-      lvlThresh[1] = map(val, 0, 127, 0, 5);
+      //lvlThresh[1] = map(val, 0, 127, 0, 5);
     }
     else if (chan == 4) {
       probModEdge1 = 2 * float(val) / 127.0;
       println(probModEdge1);
     }
     else if (chan == 5) {
-      lvlThresh[2] = map(val, 0, 127, 0, 5);
+      //lvlThresh[2] = map(val, 0, 127, 0, 5);
     }
     else if (chan == 6) {
       probModEdge2 = 2 * float(val) / 127.0;
       println(probModEdge2);
     }
     else if (chan == 7) {
-      lvlThresh[3] = map(val, 0, 127, 0, 5);
+      //lvlThresh[3] = map(val, 0, 127, 0, 5);
     }
     else if (chan == 16) {
-      bandShiftIdx = (val == 127) ? (bandShiftIdx + 1)%4 : (4 + bandShiftIdx - 1) %4;
+      //bandShiftIdx = (val == 127) ? (bandShiftIdx + 1)%4 : (4 + bandShiftIdx - 1) %4;
     }
   }
 }
