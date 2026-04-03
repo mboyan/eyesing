@@ -70,24 +70,30 @@ void main(){
 
 	// Quantise if standard Ising model
 	// float scaleFactor = mix(1, 2, modelSelector) * PI;
-	float spin = mix(step(0.5, tex.x), tex.x, modelSelector) * 2.0 - 1.0;
-	float spinl = mix(step(0.5, texl.x), texl.x, modelSelector) * 2.0 - 1.0;
-	float spinr = mix(step(0.5, texr.x), texr.x, modelSelector) * 2.0 - 1.0;
-	float spint = mix(step(0.5, text.x), text.x, modelSelector) * 2.0 - 1.0;
-	float spinb = mix(step(0.5, texb.x), texb.x, modelSelector) * 2.0 - 1.0;
+	vec2 spin = mix(step(0.5, tex), tex, modelSelector) * 2.0 - 1.0;
+	vec2 spinl = mix(step(0.5, texl), texl, modelSelector) * 2.0 - 1.0;
+	vec2 spinr = mix(step(0.5, texr), texr, modelSelector) * 2.0 - 1.0;
+	vec2 spint = mix(step(0.5, text), text, modelSelector) * 2.0 - 1.0;
+	vec2 spinb = mix(step(0.5, texb), texb, modelSelector) * 2.0 - 1.0;
 
 	// Convert to theta angles
-	float theta = acos(spin) * (step(0.5, tex.y) * 2.0 - 1.0);
-	float thetal = acos(spinl) * (step(0.5, texl.y) * 2.0 - 1.0);
-	float thetar = acos(spinr) * (step(0.5, texr.y) * 2.0 - 1.0);
-	float thetat = acos(spint) * (step(0.5, text.y) * 2.0 - 1.0);
-	float thetab = acos(spinb) * (step(0.5, texb.y) * 2.0 - 1.0);
+	// float theta = acos(spin) * (step(0.5, tex.y) * 2.0 - 1.0);
+	// float thetal = acos(spinl) * (step(0.5, texl.y) * 2.0 - 1.0);
+	// float thetar = acos(spinr) * (step(0.5, texr.y) * 2.0 - 1.0);
+	// float thetat = acos(spint) * (step(0.5, text.y) * 2.0 - 1.0);
+	// float thetab = acos(spinb) * (step(0.5, texb.y) * 2.0 - 1.0);
+	float theta = atan(spin.x, spin.y);
+	float thetal = atan(spinl.x, spinl.y);
+	float thetar = atan(spinr.x, spinr.y);
+	float thetat = atan(spint.x, spint.y);
+	float thetab = atan(spinb.x, spinb.y);
 
 	// Compute new state proposal
 	uvec3 rndVal = pcg3d(uvec3(st*iResolution.xy, iTime));
 	float rndValUnit = float(rndVal.x ^ rndVal.y ^ rndVal.z) / 4294967295.0;
 	float thetaProposal = mix(PI - theta, theta + (2.0*rndValUnit - 1.0)*perturbMag, modelSelector);
-	float spinProposal = cos(thetaProposal);
+	thetaProposal = mod(thetaProposal + PI, 2.0*PI) - PI;
+	vec2 spinProposal = vec2(cos(thetaProposal), sin(thetaProposal));
 
 	float sel = step(selDensity, texture2D(noiseTexture1, st).x);
 	float hold = hamiltonian(theta, thetal, thetar, thetat, thetab, interactMod, fieldMod);
@@ -97,7 +103,8 @@ void main(){
 	float pacc = min(exp(-dH * betaMod), 1.0);
 	float noise = texture2D(noiseTexture2, st).x;
 	float selNxt = step(noise, pacc)*sel;
-	vec2 newTex = vec2(mix((spin + 1.0) * 0.5, spinProposal, selNxt), mix(tex.y, (sign(thetaProposal) + 1.0) * 0.5, selNxt));
+	vec2 newSpin = mix(spin, spinProposal, selNxt);
+	vec2 newTex = (newSpin + 1.0)*0.5;
 
 	// gl_FragColor = vec4(vec3(newTex, pacc, 0.5*dH+0.5), 1.);
 	gl_FragColor = vec4(mix(newTex.xyx, texture2D(noiseTexture1, st).xyz, noiseBlend), 1.0); // Blend noise

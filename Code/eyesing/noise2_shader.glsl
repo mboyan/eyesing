@@ -1,0 +1,61 @@
+//#version 150
+
+#ifdef GL_ES
+precision mediump float;
+precision mediump int;
+#endif
+
+#define PROCESSING_COLOR_SHADER;
+
+// ----------------------
+// -      UNIFORMS      -
+// ----------------------
+
+uniform vec3      iResolution;           // viewport resolution (in pixels)
+uniform float     iTime;                 // shader playback time (in seconds) (replaces iGlobalTime which is now obsolete)
+uniform float     iTimeDelta;            // render time (in seconds)
+uniform int       iFrame;                // shader playback frame
+uniform vec4      iMouse;                // mouse pixel coords. xy: current (if MLB down), zw: click
+uniform vec4      iDate;                 // (year, month, day, time in seconds)
+
+#define PI 3.14159265358979323846
+
+uniform sampler2D hardThreshTexture;
+uniform vec2 probModEdges;
+
+float rand(vec2 st) {
+    st = fract(st * 0.3183099);  // Scale to make the randomness denser
+    st += dot(st, st + 33.333);   // More mixing
+    return fract(st.x * st.y * 12345.6789); // Final randomness with deep mixing
+}
+
+uvec3 pcg3d(uvec3 v) {
+    v = v * uvec3(1664525u) + uvec3(1013904223u);
+    v.x += v.y * v.z;
+    v.y += v.z * v.x;
+    v.z += v.x * v.y;
+    v ^= v >> uvec3(16u);
+    v.x += v.y * v.z;
+    v.y += v.z * v.x;
+    v.z += v.x * v.y;
+    return v;
+}
+
+void main(){
+
+    vec2 st = gl_FragCoord.xy/iResolution.xy;
+
+    uvec3 rndVal = pcg3d(uvec3(st*iResolution.xy, iTime));
+    float rndValUnit1 = float(rndVal.x ^ rndVal.y ^ rndVal.z) / 4294967295.0;
+    rndVal = pcg3d(uvec3(st*iResolution.xy, iTime+91238118.1234));
+    float rndValUnit2 = float(rndVal.x ^ rndVal.y ^ rndVal.z) / 4294967295.0;
+    vec3 color = vec3(rndValUnit1, rndValUnit2, rndValUnit1);
+
+    // Spatial modulation
+    float textureMod = step(0.5, texture2D(hardThreshTexture, st).x);
+    float probMod = smoothstep(probModEdges.x, probModEdges.y, distance(st * vec2(iResolution.x/iResolution.y, 1.), vec2(0.5 * iResolution.x/iResolution.y, 0.5)));
+    // color = mix(color, step(probMod, color), textureMod);
+    color = mix(color, color*vec3(1.0 - probMod), textureMod);// * (1.0 - step(0.25, probMod));
+
+	gl_FragColor = vec4(color, 1.);
+}

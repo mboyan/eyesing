@@ -4,7 +4,7 @@ import processing.video.*;
 import themidibus.*;
 import javax.sound.midi.MidiMessage;
 
-PShader shader, visShader, noiseShader, glyphShaderTexCtrl, glyphShaderOverlay;
+PShader shader, visShader, noiseShader, noise2Shader, glyphShaderTexCtrl, glyphShaderOverlay;
 PGraphics spinGraphics, visGraphics, initGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC, glyphGraphicsTexCtrl, glyphGraphicsOverlay, noiseModGraphics;
 
 float[] hist;
@@ -51,7 +51,7 @@ float noiseBlend = 0.0;
 // Ising vs XY-model
 float modelSelector = 1.0;
 float modelSelectorPrev = modelSelector;
-float perturbMag = 0.1;
+float perturbMag = 0.001;
 
 // MIDI
 MidiBus f1Bus, x1Bus;
@@ -95,6 +95,9 @@ void setup(){
   noiseShader = loadShader("noise_shader.glsl");
   noiseShader.set("iResolution", float(width), float(height), 0.0);
   noiseShader.set("iTime", 0.0);
+  noise2Shader = loadShader("noise2_shader.glsl");
+  noise2Shader.set("iResolution", float(width), float(height), 0.0);
+  noise2Shader.set("iTime", 0.0);
   
   // Initialize spin shader
   shader = loadShader("eyesing_shader.glsl");
@@ -127,7 +130,7 @@ void setup(){
   
   // Compute initial noise
   initGraphics.beginDraw();
-  initGraphics.shader(noiseShader);
+  initGraphics.shader(noise2Shader);
   initGraphics.fill(0);
   initGraphics.rect(0, 0, width, height);
   initGraphics.endDraw();
@@ -141,7 +144,7 @@ void setup(){
     hist[i] = 0;
   }
   
-  frameRate(1);
+  //frameRate(1);
   
   // Create and turn on scanner
   screenScanner = new ScreenScanner(width*0.5, height*0.5, width*0.25, 100);
@@ -365,7 +368,7 @@ void draw(){
   image(visGraphics, 0, 0);
   
   // Feed spin image back to shader
-  //shader.set("spinTexture", spinGraphics);
+  shader.set("spinTexture", spinGraphics);
   
   // Plot histogram
   loadPixels();
