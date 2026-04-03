@@ -49,7 +49,7 @@ float probModEdge1, probModEdge2;
 float noiseBlend = 0.0;
 
 // Ising vs XY-model
-float modelSelector = 1.0;
+float modelSelector = 0.0;
 float modelSelectorPrev = modelSelector;
 float xyBlend = 1.0;
 float perturbMag = 0.1;
