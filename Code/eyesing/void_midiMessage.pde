@@ -133,9 +133,9 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
     //  glyphRepeatX = 64;
     //  glyphRepeatY = 32;
     //}
-    else if (chan == 37) {
-      glyphTextureCtrlIdx = 3;
-    }
+    //else if (chan == 37) {
+    //  glyphTextureCtrlIdx = 3;
+    //}
   }
   else if (message.getStatus() == 176) // X1 knob message
   {

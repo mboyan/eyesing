@@ -64,7 +64,7 @@ void main()
 	// Make square if iRepeat = 1
 	st = mix(st * vec2(iResolution.x/iResolution.y, 1.) - vec2(iResolution.x/iResolution.y * (0.5 - 0.5*iResolution.y/iResolution.x), 0.), st, step(1.5, iRepeat));
 
-	vec3 color = vec3(pattern(st, iRepeat) * iContrast + (1. - iContrast));
+	vec3 color = vec3(pattern(st, iRepeat) * iContrast + (1. - iContrast)*0.5);
 
 	color = mix(color * (step(0., st.x) - step(1., st.x)), color, step(1.5, iRepeat).xxx);
 

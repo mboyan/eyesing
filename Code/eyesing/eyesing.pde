@@ -25,7 +25,7 @@ float penalty;
 // WPF glyph controls
 boolean glyphOverlay = false;
 float glyphSeedA, glyphSeedB;
-int glyphTextureCtrlIdx = 3; // 0 for none, 1 for beta, 2 for field, 3 for interact
+//int glyphTextureCtrlIdx = 3; // 0 for none, 1 for beta, 2 for field, 3 for interact
 float glyphTexCtrlA, glyphTexCtrlB, glyphTexCtrlC;
 
 // Video reading
@@ -48,10 +48,11 @@ float perturbMag = 0.1;
 MidiBus f1Bus, x1Bus;
 
 // Periodic parameter modulation
-float modeChangeSpeed = 0.001;
-float glyphModSpeedA = 0.003;
-float glyphModSpeedB = 0.005;
-float glyphModSpeedC = 0.007;
+float baseSpeed = 2.0;
+float modeChangeSpeed = 0.001 * baseSpeed;
+float glyphModSpeedA = 0.000031 * baseSpeed;
+float glyphModSpeedB = 0.0000531 * baseSpeed;
+float glyphModSpeedC = 0.0000782 * baseSpeed;
 
 void setup(){
   
@@ -124,10 +125,10 @@ void setup(){
   //frameRate(1);
   
   // Create and turn on scanner
-  screenScanner = new ScreenScanner(width*0.5, height*0.5, width*0.25, 100);
-  scanToggle = false;
-  scannerCtrl = false;
-  scannerAdapt = false;
+  screenScanner = new ScreenScanner(width*0.5, height*0.5, width*0.25, 50);
+  scanToggle = true;
+  scannerCtrl = true;
+  scannerAdapt = true;
   
   // Line patterns for parameter control
   sweepSpeedA = 1;
@@ -168,17 +169,17 @@ void setup(){
   //glyphShaderOverlay = loadShader("glyph_shader.glsl");
   glyphShaderTexCtrlA.set("iResolution", float(width), float(height), 0.0);
   glyphShaderTexCtrlA.set("iContrast", glyphTexCtrlA);
-  glyphShaderTexCtrlA.set("iRepeat", 1, 1);
+  glyphShaderTexCtrlA.set("iRepeat", 1.0, 1.0);
   //glyphShaderOverlay.set("iResolution", float(width), float(height), 0.0);
   //glyphShaderOverlay.set("iContrast", 1.0);
   glyphShaderTexCtrlB = loadShader("glyph_shader.glsl");
   glyphShaderTexCtrlB.set("iResolution", float(width), float(height), 0.0);
   glyphShaderTexCtrlB.set("iContrast", glyphTexCtrlB);
-  glyphShaderTexCtrlB.set("iRepeat", 1, 1);
+  glyphShaderTexCtrlB.set("iRepeat", 1.0, 1.0);
   glyphShaderTexCtrlC = loadShader("glyph_shader.glsl");
   glyphShaderTexCtrlC.set("iResolution", float(width), float(height), 0.0);
   glyphShaderTexCtrlC.set("iContrast", glyphTexCtrlC);
-  glyphShaderTexCtrlC.set("iRepeat", 1, 1);
+  glyphShaderTexCtrlC.set("iRepeat", 1.0, 1.0);
   
   // Video input
   //video = new Movie(this, "VCLP0150.avi");
@@ -193,8 +194,8 @@ void setup(){
   //inputImg.filter(INVERT);
   
   // Noise probability modulation
-  probModEdge1 = 0.25;
-  probModEdge2 = sqrt(2)*0.3;
+  probModEdge1 = 0.3;
+  probModEdge2 = sqrt(2)*0.4;
 }
 
 
@@ -205,9 +206,10 @@ void draw(){
   modelSelector = max(min(modelSelector, 1.0), 0.0);
   xyBlend = 1.0 - pow(max(cos(frameCount*modeChangeSpeed + QUARTER_PI), 0.0), 6);
   
-  glyphTexCtrlA = cos(frameCount*glyphModSpeedA + PI)*0.25 + 0.5;
-  glyphTexCtrlB = cos(frameCount*glyphModSpeedB + PI)*0.25 + 0.5;
-  glyphTexCtrlC = cos(frameCount*glyphModSpeedC + PI)*0.25 + 0.5;
+  glyphTexCtrlA = max(min(cos(frameCount*glyphModSpeedA + PI)*2.0 + 1.0, 1.0), 0.0);
+  glyphTexCtrlB = max(min(cos(frameCount*glyphModSpeedB + PI)*2.0 + 1.0, 1.0), 0.0);
+  glyphTexCtrlC = max(min(cos(frameCount*glyphModSpeedC + PI)*2.0 + 1.0, 1.0), 0.0);
+  //println(glyphTexCtrlA);
    
   // ===== Assign patterns =====
   
@@ -251,19 +253,25 @@ void draw(){
   //glyphShaderOverlay.set("iSeedA", glyphSeedA);
   //glyphShaderOverlay.set("iSeedB", glyphSeedB);
   //glyphShaderOverlay.set("iRepeat", glyphRepeatX, glyphRepeatY);
-  
+  glyphShaderTexCtrlA.set("iContrast", glyphTexCtrlA);
   glyphGraphicsTexCtrlA.beginDraw();
   glyphGraphicsTexCtrlA.shader(glyphShaderTexCtrlA);
   glyphGraphicsTexCtrlA.fill(0);
   glyphGraphicsTexCtrlA.rect(0, 0, width, height);
   glyphGraphicsTexCtrlA.endDraw();
   
+  glyphShaderTexCtrlB.set("iSeedA", glyphSeedA);
+  glyphShaderTexCtrlB.set("iSeedB", glyphSeedB);
+  glyphShaderTexCtrlB.set("iContrast", glyphTexCtrlB);
   glyphGraphicsTexCtrlB.beginDraw();
   glyphGraphicsTexCtrlB.shader(glyphShaderTexCtrlB);
   glyphGraphicsTexCtrlB.fill(0);
   glyphGraphicsTexCtrlB.rect(0, 0, width, height);
   glyphGraphicsTexCtrlB.endDraw();
   
+  glyphShaderTexCtrlC.set("iSeedA", glyphSeedA);
+  glyphShaderTexCtrlC.set("iSeedB", glyphSeedB);
+  glyphShaderTexCtrlC.set("iContrast", glyphTexCtrlC);
   glyphGraphicsTexCtrlC.beginDraw();
   glyphGraphicsTexCtrlC.shader(glyphShaderTexCtrlC);
   glyphGraphicsTexCtrlC.fill(0);
@@ -382,7 +390,7 @@ void draw(){
     //text(str(screenScanner.pos.z), 50, 120);
     
     screenScanner.updatePos();
-    screenScanner.show();
+    //screenScanner.show();
     
     // Adapt scanner motion
     if(scannerAdapt){
