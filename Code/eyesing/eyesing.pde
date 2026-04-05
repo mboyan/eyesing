@@ -75,8 +75,10 @@ void setup(){
   // Initialize minim and track
   minim = new Minim(this);
   //in = minim.loadFile("260327_eyesing_demo_soundtrack.mp3", 1024); // change to mic input when needed
-  in = minim.getLineIn();
-  fft = new FFT(in.bufferSize(), in.sampleRate());
+  in = minim.getLineIn(Minim.MONO, 512);
+  //fft = new FFT(in.bufferSize(), in.sampleRate());
+  //println(in.bufferSize());
+  fft = new FFT(512, in.sampleRate());
   bands = new float[4];
   bandShiftIdx = 0;
   
