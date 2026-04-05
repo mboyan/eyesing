@@ -48,7 +48,7 @@ float perturbMag = 0.1;
 MidiBus f1Bus, x1Bus;
 
 // Periodic parameter modulation
-float baseSpeed = 2.0;
+float baseSpeed = 0.5;
 float modeChangeSpeed = 0.001 * baseSpeed;
 float glyphModSpeedA = 0.000031 * baseSpeed;
 float glyphModSpeedB = 0.0000531 * baseSpeed;
@@ -206,9 +206,9 @@ void draw(){
   modelSelector = max(min(modelSelector, 1.0), 0.0);
   xyBlend = 1.0 - pow(max(cos(frameCount*modeChangeSpeed + QUARTER_PI), 0.0), 6);
   
-  glyphTexCtrlA = max(min(cos(frameCount*glyphModSpeedA + PI)*2.0 + 1.0, 1.0), 0.0);
-  glyphTexCtrlB = max(min(cos(frameCount*glyphModSpeedB + PI)*2.0 + 1.0, 1.0), 0.0);
-  glyphTexCtrlC = max(min(cos(frameCount*glyphModSpeedC + PI)*2.0 + 1.0, 1.0), 0.0);
+  glyphTexCtrlA = sin(frameCount*glyphModSpeedA)*2.0 + 1.0;
+  glyphTexCtrlB = sin(frameCount*glyphModSpeedB)*2.0 + 1.0;
+  glyphTexCtrlC = sin(frameCount*glyphModSpeedC)*2.0 + 1.0;
   //println(glyphTexCtrlA);
    
   // ===== Assign patterns =====
@@ -244,9 +244,9 @@ void draw(){
   // Compute glyph texture
   //if (glyphTextureCtrlIdx > 0 || glyphOverlay){
   noiseSeed(13);
-  glyphSeedA = 2.0*noise(frameCount*0.002);
+  glyphSeedA = 2.0*noise(frameCount*0.001);
   noiseSeed(24);
-  glyphSeedB = 2.0*noise(frameCount*0.002);
+  glyphSeedB = 2.0*noise(frameCount*0.001);
   
   glyphShaderTexCtrlA.set("iSeedA", glyphSeedA);
   glyphShaderTexCtrlA.set("iSeedB", glyphSeedB);
@@ -338,6 +338,7 @@ void draw(){
   
   // Feed spin image back to shader
   shader.set("spinTexture", spinGraphics);
+  //shader.set("spinTexture", glyphGraphicsTexCtrlA);
   
   // Plot histogram
   //loadPixels();

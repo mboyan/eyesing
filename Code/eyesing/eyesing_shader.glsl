@@ -92,7 +92,7 @@ void main(){
 	float newTex = mix(spin, spinProposal, step(noise, pacc)*sel*xyBlend);
 
 	// gl_FragColor = vec4(vec3(newTex, pacc, 0.5*dH+0.5), 1.);
-	gl_FragColor = vec4(mix(vec3(newTex), texture2D(noiseTexture1, st).xyz, noiseBlend), 1.0); // Blend noise
+	gl_FragColor = vec4(mix(vec3(newTex), texture2D(noiseTexture1, st).xyz, noiseBlend) * vec3(1.0, 0.86, 0.196 + 0.5*pacc), 1.0); // Blend noise
 	// gl_FragColor = vec4(vec3(rndValUnit), 1.0);
 	// gl_FragColor = vec4(vec3(step(pacc, noise) * sel), 1.);
 	// gl_FragColor = vec4(vec3(sel), 1.);
