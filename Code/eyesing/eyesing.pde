@@ -98,14 +98,7 @@ void setup(){
   
   //size(540, 540, P2D);
   //size(800, 800, P2D);
-  //size(1080, 1350, P2D); // 4:5 format
-  //size(1600, 1600, P2D);
-  //size(1920, 1080, P2D);
-  //size(540, 810, P2D);
-  //size(1080, 360, P2D);
-  //size(1754, 1240, P2D); // A4 150dpi
-  fullScreen(P2D, 2);
-  //fullScreen(P2D);
+  fullScreen(P2D);
   
   // Compute initial noise
   noiseGraphics.beginDraw();
@@ -185,9 +178,8 @@ void setup(){
   //video = new Movie(this, "VCLP0150.avi");
   //video = new Movie(this, "DSC_1789.mp4");
   //video = new Movie(this, "grubbly.mp4");
-  video = new Movie(this, "IMG_0138.mov");
-  //video = new Movie(this, "GlitchmanWalking.mp4");
-  //video = new Movie(this, "cymatique_edited.mp4");
+  //video = new Movie(this, "IMG_0138.mov");
+  video = new Movie(this, "GlitchmanWalking.mp4");
   video.loop();
   
   inputImg = loadImage("rnkic_intro.jpg");
