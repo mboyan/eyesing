@@ -30,11 +30,11 @@ class ScreenScanner{
     
     // Compute random perturbation
     noiseSeed(seedX);
-    float vecX = noise(pos.x*0.001 + frameCount*0.1, pos.y*0.001)*2 - 1;
+    float vecX = noise(pos.x*0.001 + frameCount*0.1, pos.y*0.001 + frameCount*0.1)*2 - 0.95;
     noiseSeed(seedY);
-    float vecY = noise(pos.x*0.001 + frameCount*0.1, pos.y*0.001)*2 - 1;
+    float vecY = noise(pos.x*0.001 + frameCount*0.1, pos.y*0.001 + frameCount*0.1)*2 - 0.95;
     noiseSeed(seedZ);
-    float vecZ = noise(pos.x*0.001 + frameCount*0.1, pos.y*0.001)*2 - 1;
+    float vecZ = noise(pos.x*0.001 + frameCount*0.1, pos.y*0.001 + frameCount*0.1)*2 - 0.95;
     vec = new PVector(vecX, vecY, vecZ*10);
     //vec.add(penaltyVec);
     vec.normalize();

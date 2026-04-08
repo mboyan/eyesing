@@ -46,7 +46,7 @@ float shape(in vec2 _st, in vec2 _atA, in vec2 _atB){
 	_st = rotate2D(_st, seed*PI+dot(_atA, vec2(1.,1.)*PI));
 	_st.y = fract(3.*_st.y);
 
-	float fig = smoothstep(0.55, 0.6, _st.x+_st.y)-smoothstep(1.4, 1.45, _st.x+_st.y);
+	float fig = smoothstep(0.5, 0.65, _st.x+_st.y)-smoothstep(1.35, 1.5, _st.x+_st.y);
 	return fig*frame.x*frame.y;
 }
 

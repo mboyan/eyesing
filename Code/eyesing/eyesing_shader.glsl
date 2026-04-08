@@ -94,8 +94,8 @@ void main(){
 	float circleMask = smoothstep(0.5, 0.4, distance(st * vec2(iResolution.x/iResolution.y, 1.), vec2(0.5 * iResolution.x/iResolution.y, 0.5)));
 
 	// gl_FragColor = vec4(vec3(newTex, pacc, 0.5*dH+0.5), 1.);
-	gl_FragColor = vec4(mix(vec3(0.0, mix(0.4, tex.y, 0.8), mix(0.5, tex.z, 0.8) + 0.2*sel), vec3(1.0, 0.86 + 0.14*sel, 0.196 + 0.8*sel*pacc), newTex) * circleMask, 1.0); // Blend noise
-	// gl_FragColor = vec4(vec3(rndValUnit), 1.0);
+	gl_FragColor = vec4(mix(vec3(0.0, mix(0.4, tex.y, 0.8), mix(0.5, tex.z, 0.8) + 0.2*sel), vec3(1.0, (0.86 + 0.14*sel)/(1.0+beta), (0.196 + 0.8*sel*pacc)/(2.0-field)), newTex) * circleMask, 1.0); // Blend noise
+	// gl_FragColor = vec4(vec3(betaMod), 1.0);
 	// gl_FragColor = vec4(vec3(step(pacc, noise) * sel), 1.);
 	// gl_FragColor = vec4(vec3(sel), 1.);
 	// gl_FragColor = vec4(vec3(tex-texl-texr-text-texb), 1.);
