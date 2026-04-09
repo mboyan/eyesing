@@ -1,11 +1,7 @@
-import ddf.minim.*;
-import ddf.minim.analysis.*;
 import processing.video.*;
-import themidibus.*;
-import javax.sound.midi.MidiMessage;
 
 PShader shader, noiseShader, glyphShaderTexCtrlA, glyphShaderTexCtrlB, glyphShaderTexCtrlC, glyphShaderOverlay;
-PGraphics spinGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC, glyphGraphicsTexCtrlA, glyphGraphicsTexCtrlB, glyphGraphicsTexCtrlC, noiseModGraphics;
+PGraphics spinGraphics, noiseGraphics, glyphGraphicsTexCtrlA, glyphGraphicsTexCtrlB, glyphGraphicsTexCtrlC, noiseModGraphics;
 
 //float[] hist;
 
@@ -23,9 +19,7 @@ float modA, modB, modC, modD;
 float penalty;
 
 // WPF glyph controls
-boolean glyphOverlay = false;
 float glyphSeedA, glyphSeedB;
-//int glyphTextureCtrlIdx = 3; // 0 for none, 1 for beta, 2 for field, 3 for interact
 float glyphTexCtrlA, glyphTexCtrlB, glyphTexCtrlC;
 
 // Video reading
@@ -44,9 +38,6 @@ float modelSelectorPrev = modelSelector;
 float xyBlend = 1.0;
 float perturbMag = 0.1;
 
-// MIDI
-MidiBus f1Bus, x1Bus;
-
 // Periodic parameter modulation
 float baseSpeed = 0.5;
 float modeChangeSpeed = 0.001 * baseSpeed;
@@ -58,21 +49,9 @@ void setup(){
   
   pixelDensity(1);
   
-  // Initialize MIDI
-  MidiBus.list(); // List all available Midi devices on STDOUT. This will show each device's index and name.
-  f1Bus = new MidiBus();
-  f1Bus.registerParent(this);
-  f1Bus.addInput(1);
-  x1Bus = new MidiBus();
-  x1Bus.registerParent(this);
-  x1Bus.addInput(2);
-  
   // PGraphics objects
   spinGraphics = createGraphics(width, height, P2D);
   noiseGraphics = createGraphics(width, height, P2D);
-  paramGraphicsA = createGraphics(width, height, P2D);
-  paramGraphicsB = createGraphics(width, height, P2D);
-  paramGraphicsC = createGraphics(width, height, P2D);
   glyphGraphicsTexCtrlA = createGraphics(width, height, P2D);
   glyphGraphicsTexCtrlB = createGraphics(width, height, P2D);
   glyphGraphicsTexCtrlC = createGraphics(width, height, P2D);
@@ -138,18 +117,6 @@ void setup(){
   modD = 0;
   
   // Draw default parameter graphics
-  paramGraphicsA.beginDraw();
-  paramGraphicsA.background(127);
-  paramGraphicsA.endDraw();
-  
-  paramGraphicsB.beginDraw();
-  paramGraphicsB.background(127);
-  paramGraphicsB.endDraw();
-  
-  paramGraphicsC.beginDraw();
-  paramGraphicsC.background(127);
-  paramGraphicsC.endDraw();
-  
   noiseModGraphics.beginDraw();
   noiseModGraphics.background(255);
   noiseModGraphics.endDraw();
@@ -173,17 +140,6 @@ void setup(){
   glyphShaderTexCtrlC.set("iResolution", float(width), float(height), 0.0);
   glyphShaderTexCtrlC.set("iContrast", glyphTexCtrlC);
   glyphShaderTexCtrlC.set("iRepeat", 1.0, 1.0);
-  
-  // Video input
-  //video = new Movie(this, "VCLP0150.avi");
-  //video = new Movie(this, "DSC_1789.mp4");
-  //video = new Movie(this, "grubbly.mp4");
-  //video = new Movie(this, "IMG_0138.mov");
-  video = new Movie(this, "GlitchmanWalking.mp4");
-  video.loop();
-  
-  inputImg = loadImage("rnkic_intro.jpg");
-  //inputImg.filter(INVERT);
   
   // Noise probability modulation
   probModEdge1 = 0.3;
@@ -284,31 +240,10 @@ void draw(){
     //shader.set("paramTextureField", inputImg);
     //shader.set("paramTextureInteract", inputImg);
   } else {
-    //if (glyphTextureCtrlIdx == 1){
     shader.set("paramTextureBeta", glyphGraphicsTexCtrlA);
-    //} else {
-    //  shader.set("paramTextureBeta", paramGraphicsA);
-    //}
-    //if (glyphTextureCtrlIdx == 2){
     shader.set("paramTextureField", glyphGraphicsTexCtrlB);
-    //} else {
-    //  shader.set("paramTextureField", paramGraphicsB);
-    //}
-    //if (glyphTextureCtrlIdx == 3){
     shader.set("paramTextureInteract", glyphGraphicsTexCtrlC);
-    //} else {
-    //  shader.set("paramTextureInteract", paramGraphicsC);
-    //}
   }
-  //shader.set("spinTexture", spinGraphics);
-  
-  // Update processing shader
-  //shader.set("iTime", float(frameCount));
-  
-  //shader(shader);
-  ////image(noiseGraphics, 0, 0);
-  //fill(0);
-  //rect(0, 0, width, height);
   
   // ===========================
   // MAIN PATTERN
@@ -330,7 +265,6 @@ void draw(){
   
   // Feed spin image back to shader
   shader.set("spinTexture", spinGraphics);
-  //shader.set("spinTexture", glyphGraphicsTexCtrlA);
   
   // Plot histogram
   //loadPixels();
@@ -352,35 +286,11 @@ void draw(){
   //  saveFrame();
   //}
   
-  // ===========================
-  // PATTERN OVERLAY
-  // ===========================
   
-  // Glyph overlay
-  //if (glyphOverlay){
-  //  glyphGraphicsOverlay.beginDraw();
-  //  glyphGraphicsOverlay.shader(glyphShaderOverlay);
-  //  glyphGraphicsOverlay.fill(0);
-  //  glyphGraphicsOverlay.rect(0, 0, width, height);
-  //  glyphGraphicsOverlay.endDraw();
-  //  blendMode(MULTIPLY);
-  //  image(glyphGraphicsOverlay, 0, 0);
-  //  blendMode(BLEND);
-  //}
-  
-  //rectMode(CORNER);
-  //shader(glyphShader);
-  //fill(0);
-  //rect(0, 0, width, height);
-  
-  // Crosshair
+  // Scanner
   if(scanToggle){
     
     bSampleA = screenScanner.scan();
-    //fill(255, 0, 0);
-    //textSize(50);
-    //text(str(bSampleA), 50, 50);
-    //text(str(screenScanner.pos.z), 50, 120);
     
     screenScanner.updatePos();
     //screenScanner.show();
@@ -403,48 +313,6 @@ void draw(){
   // ===========================
   // NEXT ROUND PATTERN PRE-PROCESSING
   // ===========================
-    
-  paramGraphicsA.beginDraw();
-  if(sweepLineWA < width){
-    paramGraphicsA.background(127);
-    paramGraphicsA.stroke(modA);
-    paramGraphicsA.strokeWeight(sweepLineWA);
-    lineXA += sweepSpeedA + 0.5*sweepLineWA;
-    lineXA = lineXA%(width + sweepLineWA);
-    lineXA -= 0.5*sweepLineWA;
-    paramGraphicsA.line(lineXA, 0, lineXA, height);
-  } else {
-    paramGraphicsA.background(modA);
-  }
-  paramGraphicsA.endDraw();
-  
-  paramGraphicsB.beginDraw();
-  if(sweepLineWB < width){
-    paramGraphicsB.background(127);
-    paramGraphicsB.stroke(modB);
-    paramGraphicsB.strokeWeight(sweepLineWB);
-    lineXB += sweepSpeedB + 0.5*sweepLineWB;
-    lineXB = lineXB%(width + sweepLineWB);
-    lineXB -= 0.5*sweepLineWB;
-    paramGraphicsB.line(lineXB, 0, lineXB, height);
-  } else {
-    paramGraphicsB.background(modB);
-  }
-  paramGraphicsB.endDraw();
-  
-  paramGraphicsC.beginDraw();
-  if(sweepLineWC < width){
-    paramGraphicsC.background(127);
-    paramGraphicsC.stroke(modC);
-    paramGraphicsC.strokeWeight(sweepLineWC);
-    lineXC += sweepSpeedC + 0.5*sweepLineWC;
-    lineXC = lineXC%(width + sweepLineWC);
-    lineXC -= 0.5*sweepLineWC;
-    paramGraphicsC.line(lineXC, 0, lineXC, height);
-  } else {
-    paramGraphicsC.background(modC);
-  }
-  paramGraphicsC.endDraw();
   
   // Draw noise modulation graphics
   noiseModGraphics.beginDraw();
@@ -476,74 +344,8 @@ void mouseDragged(){
 }
 
 void keyPressed(){
-  if(key == 'Q' || key == 'q'){
-    // Flip parameter A modulation
-    modA = (modA == 0) ? 255 : 0;
-  }
-  if(key == 'W' || key == 'w'){
-    // Flip parameter B modulation
-    modB = (modB == 0) ? 255 : 0;
-  }
-  if(key == 'E' || key == 'e'){
-    // Flip parameter C modulation
-    modC = (modC == 0) ? 255 : 0;
-  }
-  if(key == 'R' || key == 'r'){
-    // Flip noise probability modulation
-    modD = (modD == 0) ? 255 : 0;
-  }
-  //if(key == 'T' || key == 't'){
-  //  // Flip noise probability modulation
-  //  xyToggle = !xyToggle;
-  //}
-  //if(key == 'Y' || key == 'y'){
-  //  // Flip noise probability modulation
-  //  viewNoise = !viewNoise;
-  //}
   if(key == 'S' || key == 's'){
     // Screenshot
     saveFrame("screenshot.tiff");
   }
-  // Glyph repeats
-  //if(key == '0'){
-  //  glyphRepeatX = 1;
-  //  glyphRepeatY = 1;
-  //}
-  //if(key == '1'){
-  //  glyphRepeatX = 8;
-  //  glyphRepeatY = 5;
-  //}
-  //if(key == '2'){
-  //  glyphRepeatX = 16;
-  //  glyphRepeatY = 10;
-  //}
-  //if(key == '3'){
-  //  glyphRepeatX = 24;
-  //  glyphRepeatY = 15;
-  //}
-  //if(key == '4'){
-  //  glyphRepeatX = 32;
-  //  glyphRepeatY = 20;
-  //}
-  //if(key == '5'){
-  //  glyphRepeatX = 40;
-  //  glyphRepeatY = 25;
-  //}
-  // FOR PROJECTOR RESOLUTION
-  //if(key == '0'){
-  //  glyphRepeatX = 1;
-  //  glyphRepeatY = 1;
-  //}
-  //if(key == '1'){
-  //  glyphRepeatX = 16;
-  //  glyphRepeatY = 9;
-  //}
-  //if(key == '2'){
-  //  glyphRepeatX = 32;
-  //  glyphRepeatY = 18;
-  //}
-  //if(key == '3'){
-  //  glyphRepeatX = 64;
-  //  glyphRepeatY = 32;
-  //}
 }
