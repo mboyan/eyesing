@@ -30,10 +30,14 @@ uniform float field;
 uniform float interact;
 uniform float selDensity;
 uniform bool xyModelToggle;
-uniform float modelSelector;
+// uniform float modelSelector;
 uniform float xyBlend;
 uniform float noiseBlend;
-uniform float perturbMag;
+// uniform float perturbMag;
+uniform bool invert;
+uniform bool quantNoise;
+uniform float colourise;
+uniform float adaptColourise;
 
 #define PI 3.14159265358979323846
 
@@ -62,7 +66,7 @@ void main(){
     float interactMod = interact + texture2D(paramTextureInteract, 1. - st).z*2. - 1.;
 
 	// Read spin texture
-	// float modelSelector = float(xyModelToggle);
+	float modelSelector = float(xyModelToggle);
 	vec4 tex = texture2D(spinTexture, st);
 	vec4 texl = texture2D(spinTexture, st + vec2(-1./iResolution.x, 0.));
 	vec4 texr = texture2D(spinTexture, st + vec2(1./iResolution.x, 0.));
@@ -80,9 +84,11 @@ void main(){
 	// Compute new state proposal
 	uvec3 rndVal = pcg3d(uvec3(st*iResolution.xy, iTime));
 	float rndValUnit = float(rndVal.x ^ rndVal.y ^ rndVal.z) / 4294967295.0;
-	float spinProposal = mix(1 - spin, fract(tex.x + (2.0*rndValUnit - 1.0)*perturbMag), modelSelector);
+	float spinProposal = mix(1 - spin, fract(tex.x + (2.0*rndValUnit - 1.0)*0.1), modelSelector);
 
-	float sel = step(selDensity, texture2D(noiseTexture1, st).x);
+	vec3 noiseVis = texture2D(noiseTexture1, st).xyz;
+
+	float sel = step(selDensity, noiseVis.x);
 	float hold = hamiltonian(spin * scaleFactor, spinl * scaleFactor, spinr * scaleFactor, spint * scaleFactor, spinb * scaleFactor, interactMod, fieldMod);
 	float hnew = hamiltonian(spinProposal * scaleFactor, spinl * scaleFactor, spinr * scaleFactor, spint * scaleFactor, spinb * scaleFactor, interactMod, fieldMod);
 	float dH = hnew - hold;
@@ -91,9 +97,17 @@ void main(){
 	float noise = texture2D(noiseTexture2, st).x;
 	float newTex = mix(spin, spinProposal, step(noise, pacc)*sel*xyBlend);
 
+	vec3 newCol = mix(vec3(newTex), mix(noiseVis, step(0.5, noiseVis), quantNoise), noiseBlend);
+
+	// Invert colours
+	newCol = mix(newCol, 1.0 - newCol, float(invert));
+
+	// Colourise
+	vec3 polyCol = mix(vec3(0.0, mix(0.4, tex.y, 0.8), mix(0.5, tex.z, 0.8) + 0.2*sel), vec3(1.0, (0.86 + 0.14*sel)/(1.0+beta), (0.196 + 0.8*sel*pacc)/(2.0-field)), newCol);
+	newCol = mix(newCol, polyCol, mix(vec3(colourise), newCol, adaptColourise));
+
 	// gl_FragColor = vec4(vec3(newTex, pacc, 0.5*dH+0.5), 1.);
-	gl_FragColor = vec4(mix(vec3(0.0, mix(0.4, tex.y, 0.8), mix(0.5, tex.z, 0.8) + 0.2*sel), vec3(1.0, (0.86 + 0.14*sel)/(1.0+beta), (0.196 + 0.8*sel*pacc)/(2.0-field)), newTex), 1.0); // Blend noise
-	// gl_FragColor = vec4(vec3(betaMod), 1.0);
+	gl_FragColor = vec4(newCol, 1.0);
 	// gl_FragColor = vec4(vec3(step(pacc, noise) * sel), 1.);
 	// gl_FragColor = vec4(vec3(sel), 1.);
 	// gl_FragColor = vec4(vec3(tex-texl-texr-text-texb), 1.);

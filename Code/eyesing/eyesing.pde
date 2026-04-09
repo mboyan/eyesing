@@ -59,6 +59,10 @@ float xyBlend = 1.0;
 // MIDI
 MidiBus f1Bus, x1Bus;
 
+// Colourisation
+float colourise = 1.0;
+float adaptColourise = 0.5;
+
 void setup(){
   
   pixelDensity(1); // For Processing 4.5.2
@@ -110,6 +114,8 @@ void setup(){
   shader.set("noiseBlend", noiseBlend);
   shader.set("invert", invertSpins);
   shader.set("quantNoise", quantizeNoise);
+  shader.set("colourise", colourise);
+  shader.set("adaptColourise", adaptColourise);
   
   //size(540, 540, P2D);
   //size(800, 800, P2D);
@@ -396,6 +402,8 @@ void draw(){
   shader.set("noiseBlend", noiseBlend);
   shader.set("invert", invertSpins);
   shader.set("quantNoise", quantizeNoise);
+  shader.set("colourise", colourise);
+  shader.set("adaptColourise", adaptColourise);
   
   // Draw spins
   //if (viewNoise){
