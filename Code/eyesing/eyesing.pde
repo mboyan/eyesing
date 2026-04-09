@@ -299,7 +299,7 @@ void draw(){
     if(scannerAdapt){
       bSampleB = screenScanner.scan();
       penalty = -4*pow(bSampleB - 0.5, 2);
-      screenScanner.stepSize = 40.0*pow(bSampleA - bSampleB, 2.0) - 50.0 * penalty;
+      screenScanner.stepSize = 8.0*pow(bSampleA - bSampleB, 2.0) - 10.0 * penalty;
     }
     
     // Control parameters with scanner
