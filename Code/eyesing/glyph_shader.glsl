@@ -36,16 +36,17 @@ vec2 rotate2D(vec2 _st, float _angle){
     return _st;
 }
 
-float shape(in vec2 _st, in vec2 _at){
+float shape(in vec2 _st, in vec2 _atA, in vec2 _atB){
 	float seed = iSeedA;
-	float mod = smoothstep(0.01, 0.4, distance(_st, _at));
+	float modA = smoothstep(0.01, 0.24, distance(_st, _atA));
+	float modB = smoothstep(0.01, 0.4, distance(_st, _atB));
 
 	vec2 frame = smoothstep(0.05, 0.051, _st)-smoothstep(0.949, 0.95, _st);
-	_st = rotate2D(_st, 2.*seed*PI+0.5*mod*PI);
-	_st = rotate2D(_st, seed*PI+dot(_at, vec2(1.,1.)*PI));
+	_st = rotate2D(_st, 2.*seed*PI+0.5*modA*PI+0.8*modB*PI);
+	_st = rotate2D(_st, seed*PI+dot(_atA, vec2(1.,1.)*PI));
 	_st.y = fract(3.*_st.y);
 
-	float fig = smoothstep(0.85, 0.9, _st.x+_st.y)-smoothstep(1.1, 1.15, _st.x+_st.y);
+	float fig = smoothstep(0.5, 0.65, _st.x+_st.y)-smoothstep(1.35, 1.5, _st.x+_st.y);
 	return fig*frame.x*frame.y;
 }
 
@@ -53,8 +54,9 @@ float pattern(in vec2 _st, in vec2 repeat){
 	float seed = iSeedB;
 	_st *= repeat;
 	vec2 i = floor(_st);
-	vec2 at = vec2(0.5) + vec2(0.35*cos(seed*PI+i.x*2.*PI/repeat.x), 0.35*sin(seed*PI+i.y*2.*PI/repeat.y)); // attractor
-	return shape(fract(_st), at);
+	vec2 atA = vec2(0.5) + vec2(0.35*cos(seed*PI+i.x*2.*PI/repeat.x), 0.35*sin(seed*PI+i.y*2.*PI/repeat.y)); // attractor A
+	vec2 atB = vec2(0.5) + vec2(0.35*cos(3.2*seed*PI+i.x*2.*PI/repeat.x), 0.35*sin(3.2*seed*PI+i.y*2.*PI/repeat.y)); // attractor B
+	return shape(fract(_st), atA, atB);
 }
 
 void main()
@@ -64,9 +66,7 @@ void main()
 	// Make square if iRepeat = 1
 	st = mix(st * vec2(iResolution.x/iResolution.y, 1.) - vec2(iResolution.x/iResolution.y * (0.5 - 0.5*iResolution.y/iResolution.x), 0.), st, step(1.5, iRepeat));
 
-	vec3 color = vec3(pattern(st, iRepeat) * iContrast + (1. - iContrast));
-
-	color = mix(color * (step(0., st.x) - step(1., st.x)), color, step(1.5, iRepeat).xxx);
+	vec3 color = vec3(pattern(st, iRepeat) * iContrast + (1. - iContrast) * 0.5);
 
 	gl_FragColor = vec4(color, 1.);
 }
