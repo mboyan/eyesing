@@ -84,6 +84,18 @@ class ScreenScanner{
     if (showLargeFrame){
       rect(0.5*width, 0.5*height, height - 50, height - 50);
     }
+    
+    fill(255, 0, 0);
+    
+    text("beta: "
+      + str(exp(map(screenScanner.pos.x, 0, width, -10.0, 10.0)))
+      + "\nfield: "
+      + str(map(screenScanner.pos.y, 0, height, -1.0, 1.0))
+      + "\ninteract: "
+      + str(map(screenScanner.pos.z, 0, width, -0.1, 1.0)),
+      pos.x + winSize*0.5 + 5, pos.y - winSize*0.5
+    );
+    //text(str(screenScanner.pos.z), 50, 120);
   }
   
   float scan(){
