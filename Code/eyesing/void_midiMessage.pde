@@ -2,13 +2,13 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
   // Receive a MidiMessage
   // MidiMessage is an abstract class, the actual passed object will be either javax.sound.midi.MetaMessage, javax.sound.midi.ShortMessage, javax.sound.midi.SysexMessage.
   // Check it out here http://java.sun.com/j2se/1.5.0/docs/api/javax/sound/midi/package-summary.html
-  //println();
-  //println("MidiMessage Data:");
-  //println("--------");
-  //println("Status Byte/MIDI Command:"+message.getStatus());
-  //for (int i = 1;i < message.getMessage().length;i++) {
-  //  println("Param "+(i+1)+": "+(int)(message.getMessage()[i] & 0xFF));
-  //}
+  println();
+  println("MidiMessage Data:");
+  println("--------");
+  println("Status Byte/MIDI Command:"+message.getStatus());
+  for (int i = 1;i < message.getMessage().length;i++) {
+    println("Param "+(i+1)+": "+(int)(message.getMessage()[i] & 0xFF));
+  }
   
   int chan = message.getMessage()[1];
   int val = message.getMessage()[2];
@@ -136,28 +136,32 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
       noiseBlend = map(val, 0, 127, 0, 1);
     }
     else if (chan == 1) {
-      lvlThresh[bandShiftIdx] = map(val, 0, 127, 0, 5);
+      //lvlThresh[bandShiftIdx] = map(val, 0, 127, 0, 5);
+      colourise = map(val, 0, 127, 0.0, 1.0);
     }
     else if (chan == 2) {
       //xyBlend = map(val, 0, 127, 0, 1);
       shader.set("beta", exp(map(val, 0, 127, -10.0, 10.0)));
     }
     else if (chan == 3) {
-      lvlThresh[1] = map(val, 0, 127, 0, 5);
+      //lvlThresh[1] = map(val, 0, 127, 0, 5);
+      adaptColourise = map(val, 0, 127, 0.0, 1.0);
     }
     else if (chan == 4) {
       probModEdge1 = 2 * float(val) / 127.0;
       println(probModEdge1);
     }
     else if (chan == 5) {
-      lvlThresh[2] = map(val, 0, 127, 0, 5);
+      //lvlThresh[2] = map(val, 0, 127, 0, 5);
+      perturbMag = map(val, 0, 127, 0.0, 10.0);
     }
     else if (chan == 6) {
       probModEdge2 = 2 * float(val) / 127.0;
       println(probModEdge2);
     }
     else if (chan == 7) {
-      lvlThresh[3] = map(val, 0, 127, 0, 5);
+      //lvlThresh[3] = map(val, 0, 127, 0, 5);
+      screenScanner.stepSize = map(val, 0, 127, 0, 100.0);
     }
     else if (chan == 16) {
       bandShiftIdx = (val == 127) ? (bandShiftIdx + 1)%4 : (4 + bandShiftIdx - 1)%4;

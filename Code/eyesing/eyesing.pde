@@ -55,13 +55,14 @@ boolean quantizeNoise = false;
 // Ising vs XY-model
 boolean xyToggle = true;
 float xyBlend = 1.0;
+float perturbMag = 0.1;
 
 // MIDI
 MidiBus f1Bus, x1Bus;
 
 // Colourisation
-float colourise = 1.0;
-float adaptColourise = 0.5;
+float colourise = 0.0;
+float adaptColourise = 0.0;
 
 void setup(){
   
@@ -116,6 +117,7 @@ void setup(){
   shader.set("quantNoise", quantizeNoise);
   shader.set("colourise", colourise);
   shader.set("adaptColourise", adaptColourise);
+  shader.set("perturbMag", perturbMag);
   
   //size(540, 540, P2D);
   //size(800, 800, P2D);
@@ -201,6 +203,10 @@ void setup(){
   // Noise probability modulation
   probModEdge1 = 0.05;
   probModEdge2 = sqrt(2);
+  
+  // Text settings
+  textSize(20);
+  textAlign(LEFT, TOP);
 }
 
 
@@ -404,6 +410,7 @@ void draw(){
   shader.set("quantNoise", quantizeNoise);
   shader.set("colourise", colourise);
   shader.set("adaptColourise", adaptColourise);
+  shader.set("perturbMag", perturbMag);
   
   // Draw spins
   //if (viewNoise){

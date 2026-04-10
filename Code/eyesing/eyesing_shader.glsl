@@ -33,7 +33,7 @@ uniform bool xyModelToggle;
 // uniform float modelSelector;
 uniform float xyBlend;
 uniform float noiseBlend;
-// uniform float perturbMag;
+uniform float perturbMag;
 uniform bool invert;
 uniform bool quantNoise;
 uniform float colourise;
@@ -84,7 +84,7 @@ void main(){
 	// Compute new state proposal
 	uvec3 rndVal = pcg3d(uvec3(st*iResolution.xy, iTime));
 	float rndValUnit = float(rndVal.x ^ rndVal.y ^ rndVal.z) / 4294967295.0;
-	float spinProposal = mix(1 - spin, fract(tex.x + (2.0*rndValUnit - 1.0)*0.1), modelSelector);
+	float spinProposal = mix(1 - spin, fract(tex.x + (2.0*rndValUnit - 1.0)*perturbMag), modelSelector);
 
 	vec3 noiseVis = texture2D(noiseTexture1, st).xyz;
 
