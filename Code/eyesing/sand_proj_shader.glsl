@@ -23,18 +23,45 @@ uniform sampler2D noiseTexture;
 
 uniform vec2 windDir;
 uniform float selDensity;
+uniform float hopDist;
 
 const int maxHops = 100;
 
 void main(){
 	vec2 st = gl_FragCoord.xy/iResolution.xy;
 
+    // Get sand height
+    float sandHeight = texture2D(heightTexture, st).x;
+
+    // Calculate normalised wind direction
+    vec2 normWindDir = normalize(winDir);
+
     // Select sand grains
     float sel = step(selDensity, texture2D(noiseTexture, st).x);
+    float sandCovered = 1.0 - step(0.0, -sandHeight);
+    sel *= sandCovered;
+
+    // Check if in shadow against wind direction
+    float maxShadowDist = length(iResolution.xy);
+    float shadowStepSize = 0.1;
+    int shadowSteps = floor(maxShadowDist / shadowStepSize);
+    float shadow = 0.0;
+    vec2 shadowProbePos = gl_FragCoord.xy;
+    float shadowProbeVal = 0.0;
+    for(int i = 0; i < shadowSteps; ++i)
+    {
+        shadowProbePos = round(shadowProbePos - shadowStepSize * normWindDir);
+        // GUARD AGAINST OUT-OF-BOUNDS!!!!
+        shadowProbeVal = texture2D(heightTexture, shadowProbePos / iResolution.xy).x;
+        shadow = step(0.5, 1.0 - shadow) * step(i * shadowStepSize, shadowProbeVal); // shadow turns true if height is larger than distance from source
+    }
 
     // Determine number of windward hops
+    vec2 newPos = gl_FragCoord.xy;
     for(int i = 0; i < maxHops; ++i)
     {
-        asd
+        newPos = round(newPos + hopDist * windDir);
+
+        // Probe new position
     }
 }
