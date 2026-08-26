@@ -44,24 +44,30 @@ void main(){
     // Check if in shadow against wind direction
     float maxShadowDist = length(iResolution.xy);
     float shadowStepSize = 0.1;
-    int shadowSteps = floor(maxShadowDist / shadowStepSize);
+    int shadowSteps = int(floor(maxShadowDist / shadowStepSize));
     float shadow = 0.0;
     vec2 shadowProbePos = gl_FragCoord.xy;
-    float shadowProbeVal = 0.0;
+    float shadowProbeHeight = 0.0;
     for(int i = 0; i < shadowSteps; ++i)
     {
         shadowProbePos = round(shadowProbePos - shadowStepSize * normWindDir);
-        // GUARD AGAINST OUT-OF-BOUNDS!!!!
-        shadowProbeVal = texture2D(heightTexture, shadowProbePos / iResolution.xy).x;
-        shadow = step(0.5, 1.0 - shadow) * step(i * shadowStepSize, shadowProbeVal); // shadow turns true if height is larger than distance from source
+        shadowProbeHeight = texture2D(heightTexture, shadowProbePos / iResolution.xy).x;
+        shadow = mix(step((i + 1) * shadowStepSize, sandHeight - shadowProbeHeight), shadow, shadow); // shadow turns true if height difference is larger than distance from source
     }
 
     // Determine number of windward hops
     vec2 newPos = gl_FragCoord.xy;
+    vec2 newPosCandidate;
+    float newPosHeight;
     for(int i = 0; i < maxHops; ++i)
     {
-        newPos = round(newPos + hopDist * windDir);
+        newPosCandidate = round(newPos + hopDist * windDir);
 
         // Probe new position
+        newPosHeight = texture2D(heightTexture, newPosCandidate / iResolution.xy).x;
+
+        // newPos = mix(newPos, newPosHeight, );
     }
+
+    gl_FragColor = vec4(vec3((1. - shadow) * sel), 1.0);
 }
