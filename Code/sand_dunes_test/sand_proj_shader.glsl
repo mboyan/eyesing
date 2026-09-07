@@ -5,7 +5,7 @@ precision mediump float;
 precision mediump int;
 #endif
 
-#define PROCESSING_COLOR_SHADER;
+#define PROCESSING_COLOR_SHADER
 
 // ----------------------
 // -      UNIFORMS      -
@@ -46,8 +46,9 @@ void main(){
     float shadow = texture2D(shadowTexture, st).x;
 
     // Determine number of windward hops
-    vec2 newPos = gl_FragCoord.xy;
+    vec2 newPos;
     vec2 newPosCandidate;
+    vec2 stCandidate;
     float newPosHeight;
     float depositProb;
     float candidateShadow;
@@ -56,17 +57,18 @@ void main(){
     float nHopsDeposited = 0.0;
     for(int i = 0; i < maxHops; ++i)
     {
-        newPosCandidate = round(newPos + hopDist * windDir);
+        newPosCandidate = gl_FragCoord.xy + round((i + 1) * hopDist * windDir);
+        stCandidate = newPosCandidate / iResolution.xy;
 
         // Probe new position
-        newPosHeight = texture2D(heightTexture, newPosCandidate / iResolution.xy).x;
+        newPosHeight = texture2D(heightTexture, stCandidate).x;
         
         // Check if candidate in shadow
-        candidateShadow = texture2D(shadowTexture, newPosCandidate / iResolution.xy).x;
+        candidateShadow = texture2D(shadowTexture, stCandidate).x;
 
         // Deposition probability: 0.4 (bare) / 0.6 (covered) / 1.0 (in shadow)
         depositProb = mix(mix(0.4, 0.6, 1.0 - step(0.0, -newPosHeight)), 1.0, candidateShadow);
-        depositTry = fract(texture2D(noiseTextureDeposit, st).x + texture2D(noiseTextureDeposit, newPosCandidate / iResolution.xy).x + 73.3247418*selNoiseSample*selNoiseSample*i);
+        depositTry = fract(texture2D(noiseTextureDeposit, st).x + texture2D(noiseTextureDeposit, stCandidate).x + 73.3247418*selNoiseSample*selNoiseSample*i);
         deposited = mix(1.0 - step(depositProb, depositTry), deposited, 1.0 - step(0.0, -deposited));
         newPos = mix(newPos, newPosCandidate, deposited);
 
@@ -76,4 +78,5 @@ void main(){
 
     // gl_FragColor = vec4(vec3((1. - shadow) * sel), 1.0);
     gl_FragColor = vec4(vec3(nHopsDeposited * sel), 1.0);
+    // gl_FragColor = vec4(vec3(sel), 1.0);
 }
