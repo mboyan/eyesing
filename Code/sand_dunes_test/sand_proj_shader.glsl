@@ -34,9 +34,6 @@ void main(){
     // Get sand height
     float sandHeight = texture2D(heightTexture, st).x;
 
-    // Calculate normalised wind direction
-    vec2 normWindDir = normalize(windDir);
-
     // Select sand grains
     float selNoiseSample = texture2D(noiseTextureSel, st).x;
     float sel = step(selDensity, selNoiseSample);
@@ -57,7 +54,7 @@ void main(){
     float nHopsDeposited = 0.0;
     for(int i = 0; i < maxHops; ++i)
     {
-        newPosCandidate = gl_FragCoord.xy + round((i + 1) * hopDist * windDir);
+        newPosCandidate = gl_FragCoord.xy + (i + 1) * hopDist * windDir + 0.5;
         stCandidate = newPosCandidate / iResolution.xy;
 
         // Probe new position

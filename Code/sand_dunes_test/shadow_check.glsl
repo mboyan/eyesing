@@ -31,17 +31,14 @@ void main(){
 
     float sandHeight = texture2D(heightTexture, st).x;
 
-    // Calculate normalised wind direction
-    vec2 normWindDir = normalize(windDir);
-
     // Check if in shadow against wind direction
     float shadowFound = 0.0;
     float shadow = 0.0;
-    vec2 shadowProbePos = gl_FragCoord.xy;
+    vec2 shadowProbePos;
     float shadowProbeHeight = 0.0;
     for(int i = 0; i < nShadowSteps; ++i)
     {
-        shadowProbePos = round(shadowProbePos - shadowStepSize * normWindDir);
+        shadowProbePos = gl_FragCoord.xy - (i + 1) * shadowStepSize * windDir + 0.5;
         shadowProbeHeight = texture2D(heightTexture, shadowProbePos / iResolution.xy).x;
         shadow = step((i + 1) * shadowStepSize, shadowProbeHeight - sandHeight);
         shadowFound = mix(shadow, shadowFound, shadowFound); // shadow turns true if height difference is larger than distance from source

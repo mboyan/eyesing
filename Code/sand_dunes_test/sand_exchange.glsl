@@ -26,26 +26,40 @@ const float grainSize = 1.0 / 256.0;
 void main(){
     vec2 st = gl_FragCoord.xy/iResolution.xy;
 
+    // vec4 exchangeTextureSample = texture2D(exchangeTexture, st);
+    // float sandHeight = exchangeTextureSample.z;
+    // float erode = 1.0 - step(0.0, -exchangeTextureSample.x);
+    // sandHeight -= erode * grainSize;
+
     float sandHeight = texture2D(exchangeTexture, st).z;
-    float erode = 1.0 - step(0.0, -texture2D(exchangeTexture, st).x);
-    sandHeight -= erode * grainSize;
 
     float nbAngle;
-    int nbx, nby;
+    float nbx, nby;
     float dia = sqrt(2);
-    float nbAngleCompare, iCompare;
+    float iCompare;
     float deposit = 0.0;
-    for (int i = 0; i < 9; ++i)
+    float erode = 0.0;
+    vec4 exchangeTextureSample;
+    for (int i = 0; i < 8; ++i)
     {
-        nbAngle = i / 9.0;
-        nbx = int(gl_FragCoord.x) + int(floor(dia * cos(2 * PI * nbAngle)));
-        nby = int(gl_FragCoord.y) + int(floor(dia * sin(2 * PI * nbAngle)));
+        nbAngle = float(i) / 8.0;
+        nbx = gl_FragCoord.x + round(dia * cos(2 * PI * nbAngle));
+        nby = gl_FragCoord.y + round(dia * sin(2 * PI * nbAngle));
 
-        iCompare = (texture2D(exchangeTexture, vec2(float(nbx), float(nby)) / iResolution.xy).y * 10. - 0.1);
-        deposit += step(0.0, -round(abs(i - iCompare)));
+        // For this neighbour, get the angle index of deposition/erosion
+        exchangeTextureSample = texture2D(exchangeTexture, (vec2(nbx, nby) + 0.5) / iResolution.xy);
+
+        // Erode to this neighbour
+        iCompare = exchangeTextureSample.x * 10. - 1.;
+        erode += step(0.0, -round(abs(float(i) - mod(iCompare + 4, 8)))) * step(0.0, iCompare);
+        
+        // Deposit from this neighbour
+        iCompare = exchangeTextureSample.y * 10. - 1.;
+        deposit += step(0.0, -round(abs(float(i) - mod(iCompare + 4, 8)))) * step(0.0, iCompare);
     }
 
     sandHeight += deposit * grainSize;
+    sandHeight -= erode * grainSize;
 
     gl_FragColor = vec4(vec3(sandHeight), 1.0);
 }
