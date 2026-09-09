@@ -23,6 +23,18 @@ uniform sampler2D exchangeTexture;
 
 const float grainSize = 1.0 / 256.0;
 
+
+const ivec2 offsets[8] = ivec2[8](
+    ivec2(1, 0),
+    ivec2(1, 1),
+    ivec2(0, 1),
+    ivec2(-1, 1),
+    ivec2(-1, 0),
+    ivec2(-1, -1),
+    ivec2(0, -1),
+    ivec2(1, -1)
+);
+
 void main(){
     vec2 st = gl_FragCoord.xy/iResolution.xy;
 
@@ -33,29 +45,32 @@ void main(){
 
     float sandHeight = texture2D(exchangeTexture, st).z;
 
-    float nbAngle;
-    float nbx, nby;
-    float dia = sqrt(2);
+    // float nbAngle;
+    // float nbx, nby;
+    // float dia = sqrt(2);
+    vec2 nbOffset;
     float iCompare;
     float deposit = 0.0;
     float erode = 0.0;
     vec4 exchangeTextureSample;
     for (int i = 0; i < 8; ++i)
     {
-        nbAngle = float(i) / 8.0;
-        nbx = gl_FragCoord.x + round(dia * cos(2 * PI * nbAngle));
-        nby = gl_FragCoord.y + round(dia * sin(2 * PI * nbAngle));
+        // nbAngle = float(i) / 4.0;
+        // nbx = gl_FragCoord.x + cos(2 * PI * nbAngle);
+        // nby = gl_FragCoord.y + sin(2 * PI * nbAngle);
+
+        nbOffset = vec2(offsets[i]);
 
         // For this neighbour, get the angle index of deposition/erosion
-        exchangeTextureSample = texture2D(exchangeTexture, (vec2(nbx, nby) + 0.5) / iResolution.xy);
+        exchangeTextureSample = texture2D(exchangeTexture, (gl_FragCoord.xy + nbOffset) / iResolution.xy);
 
         // Erode to this neighbour
-        iCompare = exchangeTextureSample.x * 10. - 1.;
-        erode += step(0.0, -round(abs(float(i) - mod(iCompare + 4, 8)))) * step(0.0, iCompare);
+        iCompare = exchangeTextureSample.y * 8. - 1.;
+        erode += step(0.0, -round(abs(float(i) - mod(iCompare + 2., 4.)))) * step(0.0, iCompare);
         
         // Deposit from this neighbour
-        iCompare = exchangeTextureSample.y * 10. - 1.;
-        deposit += step(0.0, -round(abs(float(i) - mod(iCompare + 4, 8)))) * step(0.0, iCompare);
+        iCompare = exchangeTextureSample.x * 8. - 1.;
+        deposit += step(0.0, -round(abs(float(i) - mod(iCompare + 2., 4.)))) * step(0.0, iCompare);
     }
 
     sandHeight += deposit * grainSize;

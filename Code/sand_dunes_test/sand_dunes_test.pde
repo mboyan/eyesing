@@ -5,19 +5,19 @@ PGraphics avalancheRead, avalancheWrite;
 float noiseTimeBias = 37318.3172;
 
 PVector windDir;
-float hopDist = 200.0;
-int maxHops = 64;
-int maxAvalancheSteps = 8;
+float hopDist = 5.0;
+int maxHops = 128;
+int maxAvalancheSteps = 10;
 
 void setup(){
-  //size(500, 500, P2D);
-  fullScreen(P2D);
+  size(500, 500, P2D);
+  //fullScreen(P2D);
   pixelDensity(1);
   textureWrap(REPEAT);
   //frameRate(1);
   
   // Set wind direction
-  windDir = new PVector(1.0, 0.0).normalize();
+  windDir = new PVector(0.0, 1.0).normalize();
   
   // Blank graphics
   blankGraphics = createGraphics(width, height, P2D);
@@ -39,7 +39,7 @@ void setup(){
   sandHeight.beginDraw();
   sandHeight.loadPixels();
   for(int i = 0; i < sandHeight.pixels.length; i++){
-    sandHeight.pixels[i] = color(random(255));
+    sandHeight.pixels[i] = random(1.0) > 0.9 ? color(random(255)) : color(0);
   }
   sandHeight.updatePixels();
   sandHeight.ellipse(0.5*width, 0.5*height, 100, 100);
@@ -184,4 +184,8 @@ void draw(){
   //ellipse(width*0.5, height*0.5, 10, 10);
   //image(sandProjGraphics, 0, 0);
   image(sandHeight, 0, 0);
+}
+
+void keyPressed(){
+  saveFrame();
 }
