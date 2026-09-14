@@ -64,7 +64,7 @@ void main(){
         candidateShadow = texture2D(shadowTexture, stCandidate).x;
 
         // Deposition probability: 0.4 (bare) / 0.6 (covered) / 1.0 (in shadow)
-        depositProb = mix(mix(0.4, 0.6, 1.0 - step(0.0, -newPosHeight)), 1.0, candidateShadow);
+        depositProb = mix(mix(0.6, 0.4, step(0.0, -newPosHeight)), 1.0, candidateShadow);
         depositTry = fract(texture2D(noiseTextureDeposit, st).x + texture2D(noiseTextureDeposit, stCandidate).x + 73.3247418*selNoiseSample*selNoiseSample*i);
         deposited = mix(1.0 - step(depositProb, depositTry), deposited, 1.0 - step(0.0, -deposited));
         newPos = mix(newPos, newPosCandidate, deposited);
