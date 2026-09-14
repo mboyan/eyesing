@@ -54,7 +54,7 @@ void main(){
     float nHopsDeposited = 0.0;
     for(int i = 0; i < maxHops; ++i)
     {
-        newPosCandidate = gl_FragCoord.xy + (i + 1) * hopDist * windDir + 0.5;
+        newPosCandidate = gl_FragCoord.xy + (i + 1) * hopDist * windDir;
         stCandidate = newPosCandidate / iResolution.xy;
 
         // Probe new position

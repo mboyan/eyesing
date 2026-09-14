@@ -1,13 +1,16 @@
 PShader shadowShader, sandProjShader, sandDepositShader, noiseShader, avalancheShader, sandExchangeShader;
-PGraphics shadowGraphics, sandHeight, noiseGraphicsSel, noiseGraphicsDeposit, sandProjGraphics, avalancheGraphics, blankGraphics;
+PGraphics shadowGraphics, noiseGraphicsSel, noiseGraphicsDeposit, sandProjGraphics, avalancheGraphics, blankGraphics;
+PGraphics sandHeightRead, sandHeightWrite;
 PGraphics avalancheRead, avalancheWrite;
 
 float noiseTimeBias = 37318.3172;
 
 PVector windDir;
 float hopDist = 5.0;
-int maxHops = 128;
+int maxHops = 256;
 int maxAvalancheSteps = 10;
+
+PGraphics temp;
 
 void setup(){
   size(500, 500, P2D);
@@ -17,7 +20,7 @@ void setup(){
   //frameRate(1);
   
   // Set wind direction
-  windDir = new PVector(0.0, 1.0).normalize();
+  windDir = new PVector(0.0, 0.0).normalize();
   
   // Blank graphics
   blankGraphics = createGraphics(width, height, P2D);
@@ -35,21 +38,24 @@ void setup(){
   noiseShader.set("probModEdges", 0.05, sqrt(2));
   
   // Generate initial sand height
-  sandHeight = createGraphics(width, height, P2D);
-  sandHeight.beginDraw();
-  sandHeight.loadPixels();
-  for(int i = 0; i < sandHeight.pixels.length; i++){
-    sandHeight.pixels[i] = random(1.0) > 0.9 ? color(random(255)) : color(0);
+  sandHeightRead = createGraphics(width, height, P2D);
+  sandHeightWrite = createGraphics(width, height, P2D);
+  sandHeightRead.beginDraw();
+  sandHeightRead.loadPixels();
+  for(int i = 0; i < sandHeightRead.pixels.length; i++){
+    //sandHeightRead.pixels[i] = random(1.0) > 0.9 ? color(random(255)) : color(0);
+    sandHeightRead.pixels[i] = color(random(255));
   }
-  sandHeight.updatePixels();
-  sandHeight.ellipse(0.5*width, 0.5*height, 100, 100);
-  sandHeight.endDraw();
+  sandHeightRead.updatePixels();
+  sandHeightRead.ellipse(0.5*width, 0.5*height, 100, 100);
+  sandHeightRead.endDraw();
   
   // Shadow shader parameters
   shadowShader = loadShader("shadow_check.glsl");
   shadowShader.set("iResolution", (float) width, (float) height, 0.0);
-  shadowShader.set("heightTexture", sandHeight);
+  shadowShader.set("heightTexture", sandHeightRead);
   shadowShader.set("windDir", windDir.x, windDir.y);
+  shadowShader.set("hopDist", hopDist);
   
   // Compute inital shadow
   shadowGraphics = createGraphics(width, height, P2D);
@@ -79,12 +85,13 @@ void setup(){
   
   // Sand projection shader parameters
   sandProjShader.set("iResolution", (float) width, (float) height, 0.0);
-  sandProjShader.set("heightTexture", sandHeight);
+  sandProjShader.set("heightTexture", sandHeightRead);
   sandProjShader.set("shadowTexture", shadowGraphics);
   sandProjShader.set("noiseTextureSel", noiseGraphicsSel);
   sandProjShader.set("noiseTextureDeposit", noiseGraphicsDeposit);
   sandProjShader.set("windDir", windDir.x, windDir.y);
-  sandProjShader.set("selDensity", exp(-0.01));
+  //sandProjShader.set("selDensity", exp(-0.01));
+  sandProjShader.set("selDensity", 0.5);
   sandProjShader.set("hopDist", hopDist);
   sandProjShader.set("maxHops", (float) maxHops);
   
@@ -94,7 +101,7 @@ void setup(){
   // Avalanche shader parameters
   avalancheShader = loadShader("avalanche_shader.glsl");
   avalancheShader.set("iResolution", (float) width, (float) height, 0.0);
-  avalancheShader.set("heightTexture", sandHeight);
+  avalancheShader.set("heightTexture", sandHeightRead);
   avalancheShader.set("windDir", windDir.x, windDir.y);
   avalancheShader.set("hopDist", hopDist);
   avalancheShader.set("maxHops", (float) maxHops);
@@ -125,7 +132,18 @@ void draw(){
   noiseGraphicsDeposit.rect(0, 0, width, height);
   noiseGraphicsDeposit.endDraw();
   
-  // Pass selection noise
+  // Update shadow calculation
+  shadowShader.set("heightTexture", sandHeightRead);
+  shadowGraphics.beginDraw();
+  shadowGraphics.textureWrap(REPEAT);
+  shadowGraphics.shader(shadowShader);
+  shadowGraphics.fill(0);
+  shadowGraphics.rect(0, 0, width, height);
+  shadowGraphics.endDraw();
+  
+  // Pass textures to sand projection shader
+  sandProjShader.set("heightTexture", sandHeightRead);
+  sandProjShader.set("shadowTexture", shadowGraphics);
   sandProjShader.set("noiseTextureSel", noiseGraphicsSel);
   sandProjShader.set("noiseTextureDeposit", noiseGraphicsDeposit);
   
@@ -142,7 +160,7 @@ void draw(){
   avalancheShader.set("exchangeTexture", blankGraphics);
   for (int i = 0; i < maxAvalancheSteps; i++)
   {
-    avalancheShader.set("heightTexture", sandHeight);
+    avalancheShader.set("heightTexture", sandHeightRead);
     
     //avalancheGraphics.beginDraw();
     //avalancheGraphics.textureWrap(REPEAT);
@@ -153,37 +171,57 @@ void draw(){
     
     //avalancheShader.set("remoteDepositTexture", blankGraphics);
     //avalancheShader.set("exchangeTexture", avalancheGraphics);
-    avalancheWrite.beginDraw();
-    avalancheWrite.textureWrap(REPEAT);
-    avalancheWrite.shader(avalancheShader);
-    avalancheWrite.fill(0);
-    avalancheWrite.rect(0, 0, width, height);
-    avalancheWrite.endDraw();
     
-    PGraphics temp = avalancheRead;
-    avalancheRead = avalancheWrite;
-    avalancheWrite = temp;
+    //avalancheWrite.beginDraw();
+    //avalancheWrite.textureWrap(REPEAT);
+    //avalancheWrite.shader(avalancheShader);
+    //avalancheWrite.fill(0);
+    //avalancheWrite.rect(0, 0, width, height);
+    //avalancheWrite.endDraw();
+    avalancheRead.beginDraw();
+    avalancheRead.textureWrap(REPEAT);
+    avalancheRead.shader(avalancheShader);
+    avalancheRead.fill(0);
+    avalancheRead.rect(0, 0, width, height);
+    avalancheRead.endDraw();
+    
+    //temp = avalancheRead;
+    //avalancheRead = avalancheWrite;
+    //avalancheWrite = temp;
+    
+    // Compute final sand exchange
+    //sandExchangeShader.set("exchangeTexture", avalancheGraphics);
+    //sandExchangeShader.set("exchangeTexture", avalancheRead);
+    //sandHeightWrite.beginDraw();
+    //sandHeightWrite.textureWrap(REPEAT);
+    //sandHeightWrite.shader(sandExchangeShader);
+    //sandHeightWrite.fill(0);
+    //sandHeightWrite.rect(0, 0, width, height);
+    //sandHeightWrite.endDraw();
+    sandExchangeShader.set("exchangeTexture", avalancheRead);
+    sandHeightRead.beginDraw();
+    sandHeightRead.textureWrap(REPEAT);
+    sandHeightRead.shader(sandExchangeShader);
+    sandHeightRead.fill(0);
+    sandHeightRead.rect(0, 0, width, height);
+    sandHeightRead.endDraw();
+    
+    //temp = sandHeightRead;
+    //sandHeightRead = sandHeightWrite;
+    //sandHeightWrite = temp;
     
     avalancheShader.set("remoteDepositTexture", blankGraphics);
     avalancheShader.set("exchangeTexture", avalancheRead);
   }
   
-  // Compute final sand exchange
-  //sandExchangeShader.set("exchangeTexture", avalancheGraphics);
-  sandExchangeShader.set("exchangeTexture", avalancheRead);
-  sandHeight.beginDraw();
-  sandHeight.textureWrap(REPEAT);
-  sandHeight.shader(sandExchangeShader);
-  sandHeight.fill(0);
-  sandHeight.rect(0, 0, width, height);
-  sandHeight.endDraw();
+  
   
   //shader(sandExchangeShader);
   //fill(0);
   //rect(0, 0, width, height);
   //ellipse(width*0.5, height*0.5, 10, 10);
   //image(sandProjGraphics, 0, 0);
-  image(sandHeight, 0, 0);
+  image(sandHeightRead, 0, 0);
 }
 
 void keyPressed(){

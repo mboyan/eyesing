@@ -29,22 +29,34 @@ uniform float maxHops;
 
 const float grainSize = 1.0 / 256.0;
 
+// const ivec2 offsets[8] = ivec2[8](
+//     ivec2(1, 0),
+//     ivec2(1, 1),
+//     ivec2(0, 1),
+//     ivec2(-1, 1),
+//     ivec2(-1, 0),
+//     ivec2(-1, -1),
+//     ivec2(0, -1),
+//     ivec2(1, -1)
+// );
+
 const ivec2 offsets[8] = ivec2[8](
     ivec2(1, 0),
-    ivec2(1, 1),
-    ivec2(0, 1),
-    ivec2(-1, 1),
-    ivec2(-1, 0),
-    ivec2(-1, -1),
+    ivec2(1, -1),
     ivec2(0, -1),
-    ivec2(1, -1)
+    ivec2(-1, -1),
+    ivec2(-1, 0),
+    ivec2(-1, 1),
+    ivec2(0, 1),
+    ivec2(1, 1)
 );
 
 void main(){
     vec2 st = gl_FragCoord.xy/iResolution.xy;
 
     vec4 exchangeTextureSample = texture2D(exchangeTexture, st);
-    float sandHeight = mix(exchangeTextureSample.z, texture2D(heightTexture, st).x, step(0.0, - (exchangeTextureSample.x + exchangeTextureSample.y))); // read sand height from height texture or from exchange texture if change occurred
+    // float sandHeight = mix(exchangeTextureSample.z, texture2D(heightTexture, st).x, step(0.0, - (exchangeTextureSample.x + exchangeTextureSample.y))); // read sand height from height texture or from exchange texture if change occurred
+    float sandHeight = texture2D(heightTexture, st).x;
 
     // Check if site is being eroded by wind
     float erodeWind = 1.0 - step(0.0, -texture2D(remoteDepositTexture, st).x);
@@ -85,11 +97,11 @@ void main(){
 
         // Erode to this neighbour
         iCompare = exchangeTextureSample.y * 8. - 1.;
-        erodeAvalanche += step(0.0, -round(abs(float(i) - mod(iCompare + 4., 8.)))) * step(0.0, iCompare);
+        erodeAvalanche += step(0.0, -abs(float(i) - mod(iCompare + 4., 8.))) * step(0.0, iCompare);
         
         // Deposit from this neighbour
         iCompare = exchangeTextureSample.x * 8. - 1.;
-        depositAvalanche += step(0.0, -round(abs(float(i) - mod(iCompare + 4., 8.)))) * step(0.0, iCompare);
+        depositAvalanche += step(0.0, -abs(float(i) - mod(iCompare + 4., 8.))) * step(0.0, iCompare);
     }
 
     sandHeight += depositAvalanche * grainSize;

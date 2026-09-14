@@ -23,16 +23,26 @@ uniform sampler2D exchangeTexture;
 
 const float grainSize = 1.0 / 256.0;
 
+// const ivec2 offsets[8] = ivec2[8](
+//     ivec2(1, 0),
+//     ivec2(1, 1),
+//     ivec2(0, 1),
+//     ivec2(-1, 1),
+//     ivec2(-1, 0),
+//     ivec2(-1, -1),
+//     ivec2(0, -1),
+//     ivec2(1, -1)
+// );
 
 const ivec2 offsets[8] = ivec2[8](
     ivec2(1, 0),
-    ivec2(1, 1),
-    ivec2(0, 1),
-    ivec2(-1, 1),
-    ivec2(-1, 0),
-    ivec2(-1, -1),
+    ivec2(1, -1),
     ivec2(0, -1),
-    ivec2(1, -1)
+    ivec2(-1, -1),
+    ivec2(-1, 0),
+    ivec2(-1, 1),
+    ivec2(0, 1),
+    ivec2(1, 1)
 );
 
 void main(){
@@ -66,11 +76,11 @@ void main(){
 
         // Erode to this neighbour
         iCompare = exchangeTextureSample.y * 8. - 1.;
-        erode += step(0.0, -round(abs(float(i) - mod(iCompare + 2., 4.)))) * step(0.0, iCompare);
+        erode += step(0.0, -abs(float(i) - mod(iCompare + 4., 8.))) * step(0.0, iCompare);
         
         // Deposit from this neighbour
         iCompare = exchangeTextureSample.x * 8. - 1.;
-        deposit += step(0.0, -round(abs(float(i) - mod(iCompare + 2., 4.)))) * step(0.0, iCompare);
+        deposit += step(0.0, -abs(float(i) - mod(iCompare + 4., 8.))) * step(0.0, iCompare);
     }
 
     sandHeight += deposit * grainSize;

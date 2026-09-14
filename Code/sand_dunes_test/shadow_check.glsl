@@ -5,7 +5,8 @@ precision mediump float;
 precision mediump int;
 #endif
 
-#define PROCESSING_COLOR_SHADER;
+#define PROCESSING_COLOR_SHADER
+#define PI 3.14159265358979323846
 
 // ----------------------
 // -      UNIFORMS      -
@@ -21,10 +22,12 @@ uniform vec4      iDate;                 // (year, month, day, time in seconds)
 uniform sampler2D heightTexture;
 
 uniform vec2 windDir;
+uniform float hopDist;
 
 const float shadowStepSize = 0.25;
 const float maxShadowDist = 1000;//1920 * 1080;
 const int nShadowSteps = int(floor(maxShadowDist / shadowStepSize));
+const float shadowLength = 1. / (3. * tan(PI / 12.));
 
 void main(){
 	vec2 st = gl_FragCoord.xy/iResolution.xy;
@@ -38,9 +41,9 @@ void main(){
     float shadowProbeHeight = 0.0;
     for(int i = 0; i < nShadowSteps; ++i)
     {
-        shadowProbePos = gl_FragCoord.xy - (i + 1) * shadowStepSize * windDir + 0.5;
+        shadowProbePos = gl_FragCoord.xy - (i + 1) * shadowStepSize * windDir;
         shadowProbeHeight = texture2D(heightTexture, shadowProbePos / iResolution.xy).x;
-        shadow = step((i + 1) * shadowStepSize, shadowProbeHeight - sandHeight);
+        shadow = step((i + 1) * shadowStepSize, hopDist * shadowLength * (shadowProbeHeight - sandHeight));
         shadowFound = mix(shadow, shadowFound, shadowFound); // shadow turns true if height difference is larger than distance from source
     }
 
