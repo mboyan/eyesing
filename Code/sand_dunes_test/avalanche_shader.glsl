@@ -105,38 +105,41 @@ void main(){
     sandHeight -= erodeAvalanche * grainSize;
 
     // Check gradient
-    float nbAngleEncode;
-    float nbHeight, heightDiff;
-    float nbWeightsErode[8];
-    float nbWeightsDeposit[8];
-    float nbWeightErodeSum = 0.0;
-    float nbWeightDepositSum = 0.0;
+    float nbHeight;
+    float heightDiffs[8];
     float negHeightDiff = 0.0;
     float posHeightDiff = 0.0;
-    // vec2 avalancheIndicator = vec2(0.0);
-    float avalancheThresh = 2.0 * grainSize;
     for (int i = 0; i < 8; ++i)
     {
         nbOffset = vec2(offsets[i]);
         nbHeight = texture2D(exchangeTexture, (gl_FragCoord.xy + nbOffset) / iResolution.xy).x;
-        heightDiff = sandHeight - nbHeight;
 
-        nbWeightsErode[i] = step(avalancheThresh, heightDiff);
+        heightDiffs[i] = sandHeight - nbHeight;
+        negHeightDiff = max(-heightDiffs[i], negHeightDiff);
+        posHeightDiff = max(heightDiffs[i], posHeightDiff);
+    }
+    float avalancheThresh = 2.0 * grainSize;
+    float nbWeightsErode[8];
+    float nbWeightsDeposit[8];
+    float nbWeightErodeSum = 0.0;
+    float nbWeightDepositSum = 0.0;
+    for (int i = 0; i < 8; ++i)
+    {
+        nbWeightsErode[i] = step(0.0, -abs(heightDiffs[i] - posHeightDiff)) * step(avalancheThresh, heightDiffs[i]);
+        nbWeightsDeposit[i] = step(0.0, -abs(-heightDiffs[i] - negHeightDiff)) * step(avalancheThresh, -heightDiffs[i]);
         nbWeightErodeSum += nbWeightsErode[i];
-
-        nbWeightsDeposit[i] = step(avalancheThresh, -heightDiff);
         nbWeightDepositSum += nbWeightsDeposit[i];
-
-        // nbAngleEncode = float(i + 1) / 8.0;
-        // avalancheIndicator.x = mix(avalancheIndicator.x, step(avalancheThresh, heightDiff) * nbAngleEncode, step(posHeightDiff + grainSize, heightDiff));     // avalanche due to deposition towards neighbour, should give to this neighbour
-        // posHeightDiff = max(posHeightDiff, heightDiff);
-        // avalancheIndicator.y = mix(avalancheIndicator.y, step(avalancheThresh, -heightDiff) * nbAngleEncode, step(negHeightDiff + grainSize, -heightDiff));   
-        // negHeightDiff = max(negHeightDiff, -heightDiff);
     }
 
+    float nbAngleEncode;
     float rndSelErode = texture2D(noiseTexture, st).x;
     float rndSelDeposit = rndSelErode * nbWeightDepositSum;
     rndSelErode *= nbWeightErodeSum;
+    // float randomValue = fract(
+    //     sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453
+    // );
+    // float rndSelErode = randomValue * nbWeightErodeSum;
+    // float rndSelDeposit = randomValue * nbWeightDepositSum;
     float lowErode = 0.0;
     float highErode = 0.0;
     float lowDeposit = 0.0;
@@ -149,15 +152,15 @@ void main(){
 
         highErode = lowErode + nbWeightsErode[i];
         erode = step(lowErode, rndSelErode) * (1.0 - step(highErode, rndSelErode));
-        avalancheIndicator.x = mix(erode * nbAngleEncode, avalancheIndicator.x, erode);     // avalanche due to deposition towards neighbour, should give to this neighbour
+        avalancheIndicator.x = mix(avalancheIndicator.x, erode * nbAngleEncode, erode);     // avalanche due to deposition towards neighbour, should give to this neighbour
         lowErode = highErode;
 
         highDeposit = lowDeposit + nbWeightsDeposit[i];
         deposit = step(lowDeposit, rndSelDeposit) * (1.0 - step(highDeposit, rndSelDeposit));
-        avalancheIndicator.y = mix(deposit * nbAngleEncode, avalancheIndicator.y, deposit); // avalanche due to erosion from neighbour, should take from this neighbour
+        avalancheIndicator.y = mix(avalancheIndicator.y, deposit * nbAngleEncode, deposit); // avalanche due to erosion from neighbour, should take from this neighbour
         lowDeposit = highDeposit;
     }
 
     gl_FragColor = vec4(sandHeight, avalancheIndicator * (1.0 - step(0.0, - (erodeWind + depositWind + erodeAvalanche + depositAvalanche))), 1.0);
-    // gl_FragColor = vec4(vec3(depositWind), 1.0);
+    // gl_FragColor = vec4(nbWeightsErode[0], nbWeightsErode[1], nbWeightsErode[7], 1.0);
 }

@@ -27,7 +27,7 @@ uniform float hopDist;
 const float shadowStepSize = 0.25;
 const float maxShadowDist = 1000;//1920 * 1080;
 const int nShadowSteps = int(floor(maxShadowDist / shadowStepSize));
-const float shadowFactor = 1. / (3. * tan(PI / 12.)); // corresponds to 15 degrees
+const float shadowFactor = tan(PI / 12.); // corresponds to 15 degrees
 
 void main(){
 	vec2 st = gl_FragCoord.xy/iResolution.xy;
@@ -43,7 +43,7 @@ void main(){
     {
         shadowProbePos = gl_FragCoord.xy - (i + 1) * shadowStepSize * windDir;
         shadowProbeHeight = texture2D(heightTexture, shadowProbePos / iResolution.xy).x;
-        shadow = step((i + 1) * shadowStepSize, hopDist * shadowFactor * (shadowProbeHeight - sandHeight));
+        shadow = step((i + 1) * shadowStepSize * shadowFactor, hopDist * (shadowProbeHeight - sandHeight));
         shadowFound = mix(shadow, shadowFound, shadowFound); // shadow turns true if height difference is larger than distance from source
     }
 
