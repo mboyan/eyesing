@@ -21,7 +21,7 @@ uniform vec4      iDate;                 // (year, month, day, time in seconds)
 
 uniform sampler2D exchangeTexture;
 
-const float grainSize = 1.0 / 256.0;
+const float grainSize = 1.0 / 16.0;//15.0 / 255.0;//256.0;
 
 const ivec2 offsets[8] = ivec2[8](
     ivec2(1, 0),
@@ -60,9 +60,10 @@ void main(){
     // float dia = sqrt(2);
     vec2 nbOffset;
     float iCompare;
+    vec2 iDiff;
     float deposit = 0.0;
     float erode = 0.0;
-    vec4 exchangeTextureSample;
+    vec2 exchangeTextureSample;
     for (int i = 0; i < 8; ++i)
     {
         // nbAngle = float(i) / 4.0;
@@ -72,15 +73,25 @@ void main(){
         nbOffset = vec2(offsets[i]);
 
         // For this neighbour, get the angle index of deposition/erosion
-        exchangeTextureSample = texture2D(exchangeTexture, (gl_FragCoord.xy + nbOffset) / iResolution.xy);
+        exchangeTextureSample = texture2D(exchangeTexture, (gl_FragCoord.xy + nbOffset) / iResolution.xy).yz;
 
         // Erode to this neighbour
-        iCompare = exchangeTextureSample.z * 8. - 1.;
+        iCompare = exchangeTextureSample.y * 8. - 1.;
         erode += step(0.0, -abs(float(i) - mod(iCompare + 4., 8.))) * step(0.0, iCompare);
         
         // Deposit from this neighbour
-        iCompare = exchangeTextureSample.y * 8. - 1.;
+        iCompare = exchangeTextureSample.x * 8. - 1.;
         deposit += step(0.0, -abs(float(i) - mod(iCompare + 4., 8.))) * step(0.0, iCompare);
+
+        // // Erode to this neighbour
+        // iCompare = round(exchangeTextureSample.y * 8. - 1.);
+        // iDiff = nbOffset + vec2(offsets[int(max(0.0, iCompare))]);
+        // erode += step(0.0, -abs(iDiff.x)) * step(0.0, -abs(iDiff.y)) * step(0.0, iCompare);
+        
+        // // Deposit from this neighbour
+        // iCompare = round(exchangeTextureSample.x * 8. - 1.);
+        // iDiff = nbOffset + vec2(offsets[int(max(0.0, iCompare))]);
+        // deposit += step(0.0, -abs(iDiff.x)) * step(0.0, -abs(iDiff.y)) * step(0.0, iCompare);
     }
 
     sandHeight += deposit * grainSize;

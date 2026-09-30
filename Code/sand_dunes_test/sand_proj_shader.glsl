@@ -50,6 +50,7 @@ void main(){
     float depositProb;
     float candidateShadow;
     float depositTry = 0.0;
+    float depositHit, firstDeposit;
     float deposited = 0.0;
     float nHopsDeposited = 0.0;
     for(int i = 0; i < maxHops; ++i)
@@ -66,11 +67,17 @@ void main(){
         // Deposition probability: 0.4 (bare) / 0.6 (covered) / 1.0 (in shadow)
         depositProb = mix(mix(0.6, 0.4, step(0.0, -newPosHeight)), 1.0, candidateShadow);
         depositTry = fract(texture2D(noiseTextureDeposit, st).x + texture2D(noiseTextureDeposit, stCandidate).x + 73.3247418*selNoiseSample*selNoiseSample*i);
-        deposited = mix(deposited, step(depositTry, depositProb), step(0.0, -deposited));
-        // newPos = mix(newPosCandidate, newPos, deposited);
+        depositHit = step(depositTry, depositProb);
+        firstDeposit = (1.0 - deposited) * depositHit;
 
         // Save number of hops until deposition
-        nHopsDeposited = mix((i + 1) / maxHops, nHopsDeposited, deposited);
+        // nHopsDeposited = mix((i + 1) / maxHops, nHopsDeposited, deposited);
+        nHopsDeposited = mix(nHopsDeposited, (i + 1) / maxHops, firstDeposit);
+
+        // Update deposited state
+        // deposited = mix(deposited, step(depositTry, depositProb), step(0.0, -deposited));
+        deposited = max(deposited, depositHit);
+        // newPos = mix(newPosCandidate, newPos, deposited);
     }
 
     // gl_FragColor = vec4(vec3((1. - shadow) * sel), 1.0);
