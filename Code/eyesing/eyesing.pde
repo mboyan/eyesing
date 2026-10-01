@@ -63,7 +63,7 @@ boolean xyToggle = true;
 float xyBlend = 1.0;
 
 // Sand dune model variables
-boolean toggleSandDunes = true;
+boolean toggleSandDunes = false;
 PVector windDir = new PVector(0.0, 1.0).normalize();
 float hopDist = 15.0;
 int maxHops = 17;
@@ -145,21 +145,21 @@ void setup(){
   noiseShader.set("iTime", 0.0);
   
   // Compute initial noise for spin texture
-  renderGraphics(noiseGraphics, noiseShader);
+  //renderGraphics(noiseGraphics, noiseShader);
   
   // Pass initial spin state
-  shader.set("spinTexture", noiseGraphics);
+  //shader.set("spinTexture", noiseGraphics);
   
   // Compute initial noise for sand selection
-  noiseShader.set("iTime", noiseTimeBiasA);
-  renderGraphics(noiseGraphics, noiseShader);
+  //noiseShader.set("iTime", noiseTimeBiasA);
+  //renderGraphics(noiseGraphics, noiseShader);
   
   // Sand projection shader parameters
   sandProjShader = loadShader("sand_proj_shader.glsl");
   sandProjShader.set("iResolution", (float) width, (float) height, 0.0);
-  sandProjShader.set("heightTexture", sandExchangeGraphics);
-  sandProjShader.set("shadowTexture", shadowGraphics);
-  sandProjShader.set("noiseTextureSel", noiseGraphics);
+  //sandProjShader.set("heightTexture", sandExchangeGraphics);
+  //sandProjShader.set("shadowTexture", shadowGraphics);
+  //sandProjShader.set("noiseTextureSel", noiseGraphics);
   sandProjShader.set("windDir", windDir.x, windDir.y);
   //sandProjShader.set("selDensity", selDensity);
   sandProjShader.set("hopDist", hopDist);
@@ -227,7 +227,7 @@ void setup(){
   probModEdge2 = sqrt(2);
   
   // Draw initial spin graphics
-  if (toggleSandDunes) renderGraphics(spinGraphics, shader);
+  //if (toggleSandDunes) renderGraphics(spinGraphics, shader);
   
   // Sand exchange and output shader parameters
   sandExchangeShader = loadShader("sand_exchange.glsl");
@@ -235,11 +235,11 @@ void setup(){
   sandExchangeShader.set("grainSize", grainSize);
   sandConvertShader = loadShader("sand_convert_shader.glsl");
   sandConvertShader.set("iResolution", (float) width, (float) height, 0.0);
-  sandConvertShader.set("heightTexture", spinGraphics);
+  //sandConvertShader.set("heightTexture", spinGraphics);
   
   // Initialize sand exchange graphics
   sandExchangeGraphics = createGraphics(width, height, P2D);
-  renderGraphics(sandExchangeGraphics, sandConvertShader);
+  //renderGraphics(sandExchangeGraphics, sandConvertShader);
   
   // Initialise sand deposition graphics
   sandProjGraphics = createGraphics(width, height, P2D);
@@ -247,18 +247,18 @@ void setup(){
   // Shadow shader parameters
   shadowShader = loadShader("shadow_check.glsl");
   shadowShader.set("iResolution", (float) width, (float) height, 0.0);
-  shadowShader.set("heightTexture", sandExchangeGraphics);
+  //shadowShader.set("heightTexture", sandExchangeGraphics);
   shadowShader.set("windDir", windDir.x, windDir.y);
   shadowShader.set("hopDist", hopDist);
   
   // Compute inital shadow
   shadowGraphics = createGraphics(width, height, P2D);
-  renderGraphics(shadowGraphics, shadowShader);
+  //renderGraphics(shadowGraphics, shadowShader);
   
   // Avalanche shader parameters
   avalancheShader = loadShader("avalanche_shader.glsl");
   avalancheShader.set("iResolution", (float) width, (float) height, 0.0);
-  avalancheShader.set("exchangeTexture", sandExchangeGraphics);
+  //avalancheShader.set("exchangeTexture", sandExchangeGraphics);
   avalancheShader.set("windDir", windDir.x, windDir.y);
   avalancheShader.set("hopDist", hopDist);
   avalancheShader.set("maxHops", (float) maxHops);
@@ -451,7 +451,7 @@ void draw(){
   // MAIN PATTERN
   // ===========================
   
-  if (toggleSandDunes)
+  if (toggleSandDunes && frameCount > 1)
   {
     // Update selection noise
     noiseShader.set("iTime", (float) frameCount);
@@ -518,6 +518,10 @@ void draw(){
       invertSpins = false;
     }
     renderGraphics(spinGraphics, shader);
+    
+    // Feed spin graphics to sand dune algo
+    sandConvertShader.set("heightTexture", spinGraphics);
+    renderGraphics(sandExchangeGraphics, sandConvertShader);
   }
   
   image(spinGraphics, 0, 0);
