@@ -59,18 +59,18 @@ float noiseBlend = 0.0;
 boolean quantizeNoise = false;
 
 // Ising vs XY-model
-boolean xyToggle = true;
+boolean xyToggle = false;
 float xyBlend = 1.0;
 
 // Sand dune model variables
 boolean toggleSandDunes = false;
-PVector windDir = new PVector(0.0, 1.0).normalize();
+PVector windDir = new PVector(1.0, 0.0).normalize();
 float hopDist = 15.0;
 int maxHops = 17;
 int maxAvalancheSteps = 2;
 float grainSize = 1.0 / 32.0;
 //float selDensity = 0.75;
-boolean toggleSelDensMod = false;
+boolean toggleSelDensMod = true;
 
 // MIDI
 MidiBus f1Bus, x1Bus;
@@ -80,12 +80,13 @@ void setup(){
   //size(540, 540, P2D);
   //size(800, 800, P2D);
   //size(1080, 1350, P2D); // 4:5 format
+  size(1350, 1080, P2D); // 5:4 format
   //size(1600, 1600, P2D);
   //size(1920, 1080, P2D);
   //size(540, 810, P2D);
   //size(1080, 360, P2D);
   //size(1754, 1240, P2D); // A4 150dpi
-  fullScreen(P2D, 2);
+  //fullScreen(P2D, 2);
   //fullScreen(P2D);
   pixelDensity(1); // For Processing 4.5.2
   textureWrap(REPEAT);
@@ -235,6 +236,7 @@ void setup(){
   sandExchangeShader.set("grainSize", grainSize);
   sandConvertShader = loadShader("sand_convert_shader.glsl");
   sandConvertShader.set("iResolution", (float) width, (float) height, 0.0);
+  sandConvertShader.set("invert", invertSpins);
   //sandConvertShader.set("heightTexture", spinGraphics);
   
   // Initialize sand exchange graphics
@@ -502,6 +504,7 @@ void draw(){
     renderGraphics(sandExchangeGraphics, sandExchangeShader);
     
     sandConvertShader.set("heightTexture", sandExchangeGraphics);
+    sandConvertShader.set("invert", invertSpins);
     renderGraphics(spinGraphics, sandConvertShader);
   }
   else
@@ -579,24 +582,33 @@ void draw(){
     
     // Flicker bands
     if(audioReact){
+      if (screenScanner.toggleRotate) {
+        pushMatrix();
+        translate(screenScanner.pos.x, screenScanner.pos.y);
+        rotate(QUARTER_PI);
+        translate(-screenScanner.pos.x, -screenScanner.pos.y);
+      }
       fill(0);
       noStroke();
       rectMode(CORNER);
       if(bands[0] < lvlThresh[0]){
-        rect(screenScanner.pos.x + screenScanner.winSize*0.5, screenScanner.pos.y, width, height);
-        rect(screenScanner.pos.x, screenScanner.pos.y + screenScanner.winSize*0.5, width, height);
+        rect(screenScanner.pos.x + screenScanner.winSize*0.5, screenScanner.pos.y, 2*width, 2*height);
+        rect(screenScanner.pos.x, screenScanner.pos.y + screenScanner.winSize*0.5, 2*width, 2*height);
       }
       if(bands[1] < lvlThresh[1]){
-        rect(screenScanner.pos.x + screenScanner.winSize*0.5, screenScanner.pos.y, width, -height);
-        rect(screenScanner.pos.x, screenScanner.pos.y - screenScanner.winSize*0.5, width, -height);
+        rect(screenScanner.pos.x + screenScanner.winSize*0.5, screenScanner.pos.y, 2*width, -2*height);
+        rect(screenScanner.pos.x, screenScanner.pos.y - screenScanner.winSize*0.5, 2*width, -2*height);
       }
       if(bands[2] < lvlThresh[2]){
-        rect(screenScanner.pos.x - screenScanner.winSize*0.5, screenScanner.pos.y, -width, height);
-        rect(screenScanner.pos.x, screenScanner.pos.y + screenScanner.winSize*0.5, -width, height);
+        rect(screenScanner.pos.x - screenScanner.winSize*0.5, screenScanner.pos.y, -2*width, 2*height);
+        rect(screenScanner.pos.x, screenScanner.pos.y + screenScanner.winSize*0.5, -2*width, 2*height);
       }
       if(bands[3] < lvlThresh[3]){
-        rect(screenScanner.pos.x - screenScanner.winSize*0.5, screenScanner.pos.y, -width, -height);
-        rect(screenScanner.pos.x, screenScanner.pos.y - screenScanner.winSize*0.5, -width, -height);
+        rect(screenScanner.pos.x - screenScanner.winSize*0.5, screenScanner.pos.y, -2*width, -2*height);
+        rect(screenScanner.pos.x, screenScanner.pos.y - screenScanner.winSize*0.5, -2*width, -2*height);
+      }
+      if (screenScanner.toggleRotate) {
+        popMatrix();
       }
     }
     screenScanner.show();

@@ -20,11 +20,13 @@ uniform vec4      iDate;                 // (year, month, day, time in seconds)
 
 uniform sampler2D heightTexture;
 
+uniform bool invert;
+
 void main(){
     vec2 st = gl_FragCoord.xy/iResolution.xy;
 
     vec3 texSample = texture2D(heightTexture, st).xyz;
-    float sandHeight = texSample.x;
+    float sandHeight = mix(texSample.x, 1.0 - texSample.x, float(invert));
 
     float killGB = step(0.0, -texSample.y - texSample.z);
 

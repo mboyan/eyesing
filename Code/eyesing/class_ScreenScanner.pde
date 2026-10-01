@@ -9,6 +9,8 @@ class ScreenScanner{
   PImage scanSegment;
   float avgBrightness;
   boolean showLargeFrame;
+  boolean showCross;
+  boolean toggleRotate;
   
   ScreenScanner(float x, float y, float z, float size){
     pos = new PVector(x, y, z);
@@ -24,6 +26,8 @@ class ScreenScanner{
     
     //penaltyVec = new PVector(0.0, 0.0);
     showLargeFrame = false;
+    showCross = true;
+    toggleRotate = true;
   }
   
   void updatePos(){
@@ -68,11 +72,32 @@ class ScreenScanner{
   }
   
   void show(){
-    stroke(255, 0, 0);
-    strokeWeight(3);
+    //stroke(255, 0, 0, 100);
     noFill();
     rectMode(CENTER);
-    rect(pos.x, pos.y, winSize, winSize);
+    float gradient;
+    if (toggleRotate) {
+      pushMatrix();
+      translate(pos.x, pos.y);
+      rotate(QUARTER_PI);
+      translate(-pos.x, -pos.y);
+    }
+    for (int i = 6; i >= 0; i--){
+      gradient = 255*(6 - i)/6;
+      stroke(0, gradient, gradient*0.5, gradient);
+      strokeWeight(i*2 + 1);
+      rect(pos.x, pos.y, winSize, winSize);
+      
+      if (showCross) {
+        line(pos.x + 0.5*winSize, pos.y, 2*width, pos.y);
+        line(pos.x - 0.5*winSize, pos.y, -width, pos.y);
+        line(pos.x, pos.y + 0.5*winSize, pos.x, 2*height);
+        line(pos.x, pos.y - 0.5*winSize, pos.x, -height);
+      }
+    }
+    if (toggleRotate) {
+      popMatrix();
+    }
     
     if (showLargeFrame){
       rect(0.5*width, 0.5*height, height - 50, height - 50);

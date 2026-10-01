@@ -36,7 +36,7 @@ void main(){
     float sandHeight = texture2D(heightTexture, st).x;
 
     // Select sand grains
-    float selDensity = texture2D(selDensityTexture, st).x;
+    float selDensity = 1.0 - texture2D(selDensityTexture, st).x;
     float selNoiseSample = texture2D(noiseTextureSel, st).x;
     float sel = step(selDensity, selNoiseSample);
     float sandCovered = 1.0 - step(0.0, -sandHeight);
