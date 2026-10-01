@@ -5,7 +5,13 @@ import themidibus.*;
 import javax.sound.midi.MidiMessage;
 
 PShader shader, noiseShader, glyphShaderTexCtrl, glyphShaderOverlay;
+PShader sandProjShader, sandExchangeShader, shadowShader, sandConvertShader, avalancheShader;
 PGraphics spinGraphics, noiseGraphics, paramGraphicsA, paramGraphicsB, paramGraphicsC, glyphGraphicsTexCtrl, glyphGraphicsOverlay, noiseModGraphics;
+PGraphics blankGraphicsZero, blankGraphicsMid, sandExchangeGraphics, shadowGraphics, sandProjGraphics, avalancheGraphics;
+
+float noiseTimeBiasA = 37318.3172;
+float noiseTimeBiasB = 74123.9213;
+float noiseTimeBiasC = 2133.31923;
 
 //float[] hist;
 
@@ -56,12 +62,33 @@ boolean quantizeNoise = false;
 boolean xyToggle = true;
 float xyBlend = 1.0;
 
+// Sand dune model variables
+boolean toggleSandDunes = false;
+PVector windDir = new PVector(0.0, 1.0).normalize();
+float hopDist = 15.0;
+int maxHops = 17;
+int maxAvalancheSteps = 2;
+float grainSize = 1.0 / 32.0;
+//float selDensity = 0.75;
+boolean toggleSelDensMod = true;
+
 // MIDI
 MidiBus f1Bus, x1Bus;
 
 void setup(){
   
+  //size(540, 540, P2D);
+  //size(800, 800, P2D);
+  //size(1080, 1350, P2D); // 4:5 format
+  //size(1600, 1600, P2D);
+  //size(1920, 1080, P2D);
+  //size(540, 810, P2D);
+  //size(1080, 360, P2D);
+  //size(1754, 1240, P2D); // A4 150dpi
+  fullScreen(P2D, 2);
+  //fullScreen(P2D);
   pixelDensity(1); // For Processing 4.5.2
+  textureWrap(REPEAT);
   
   // Initialize MIDI
   MidiBus.list(); // List all available Midi devices on STDOUT. This will show each device's index and name.
@@ -92,10 +119,11 @@ void setup(){
   glyphGraphicsOverlay = createGraphics(width, height, P2D);
   noiseModGraphics = createGraphics(width, height, P2D);
   
-  // Initialize noise shader
-  noiseShader = loadShader("noise_shader.glsl");
-  noiseShader.set("iResolution", float(width), float(height), 0.0);
-  noiseShader.set("iTime", 0.0);
+  // Blank graphics
+  blankGraphicsZero = createGraphics(width, height, P2D);
+  renderGraphics(blankGraphicsZero, 0);
+  blankGraphicsMid = createGraphics(width, height, P2D);
+  renderGraphics(blankGraphicsMid, 127);
   
   // Initialize spin shader
   shader = loadShader("eyesing_shader.glsl");
@@ -111,26 +139,36 @@ void setup(){
   shader.set("invert", invertSpins);
   shader.set("quantNoise", quantizeNoise);
   
-  //size(540, 540, P2D);
-  //size(800, 800, P2D);
-  //size(1080, 1350, P2D); // 4:5 format
-  //size(1600, 1600, P2D);
-  //size(1920, 1080, P2D);
-  //size(540, 810, P2D);
-  //size(1080, 360, P2D);
-  //size(1754, 1240, P2D); // A4 150dpi
-  fullScreen(P2D, 2);
-  //fullScreen(P2D);
+  // Initialize noise shader
+  noiseShader = loadShader("noise_shader.glsl");
+  noiseShader.set("iResolution", float(width), float(height), 0.0);
+  noiseShader.set("iTime", 0.0);
   
-  // Compute initial noise
-  noiseGraphics.beginDraw();
-  noiseGraphics.shader(noiseShader);
-  noiseGraphics.fill(0);
-  noiseGraphics.rect(0, 0, width, height);
-  noiseGraphics.endDraw();
+  // Compute initial noise for spin texture
+  renderGraphics(noiseGraphics, noiseShader);
   
   // Pass initial spin state
   shader.set("spinTexture", noiseGraphics);
+  
+  // Compute initial noise for sand selection
+  noiseShader.set("iTime", noiseTimeBiasA);
+  renderGraphics(noiseGraphics, noiseShader);
+  
+  // Sand projection shader parameters
+  sandProjShader = loadShader("sand_proj_shader.glsl");
+  sandProjShader.set("iResolution", (float) width, (float) height, 0.0);
+  sandProjShader.set("heightTexture", sandExchangeGraphics);
+  sandProjShader.set("shadowTexture", shadowGraphics);
+  sandProjShader.set("noiseTextureSel", noiseGraphics);
+  sandProjShader.set("windDir", windDir.x, windDir.y);
+  //sandProjShader.set("selDensity", selDensity);
+  sandProjShader.set("hopDist", hopDist);
+  sandProjShader.set("maxHops", (float) maxHops);
+  
+  // Compute initial noise for sand deposition
+  noiseShader.set("iTime", noiseTimeBiasB);
+  renderGraphics(noiseGraphics, noiseShader);
+  sandProjShader.set("noiseTextureDeposit", noiseGraphics);
   
   //hist = new float[width];
   //for (int i = 0; i < hist.length; i++){
@@ -195,10 +233,51 @@ void setup(){
   // Noise probability modulation
   probModEdge1 = 0.05;
   probModEdge2 = sqrt(2);
+  
+  // Draw initial spin graphics
+  renderGraphics(spinGraphics, shader);
+  
+  // Sand exchange and output shader parameters
+  sandExchangeShader = loadShader("sand_exchange.glsl");
+  sandExchangeShader.set("iResolution", (float) width, (float) height, 0.0);
+  sandExchangeShader.set("grainSize", grainSize);
+  sandConvertShader = loadShader("sand_convert_shader.glsl");
+  sandConvertShader.set("iResolution", (float) width, (float) height, 0.0);
+  sandConvertShader.set("heightTexture", spinGraphics);
+  
+  // Initialize sand exchange graphics
+  sandExchangeGraphics = createGraphics(width, height, P2D);
+  renderGraphics(sandExchangeGraphics, sandConvertShader);
+  
+  // Initialise sand deposition graphics
+  sandProjGraphics = createGraphics(width, height, P2D);
+  
+  // Shadow shader parameters
+  shadowShader = loadShader("shadow_check.glsl");
+  shadowShader.set("iResolution", (float) width, (float) height, 0.0);
+  shadowShader.set("heightTexture", sandExchangeGraphics);
+  shadowShader.set("windDir", windDir.x, windDir.y);
+  shadowShader.set("hopDist", hopDist);
+  
+  // Compute inital shadow
+  shadowGraphics = createGraphics(width, height, P2D);
+  renderGraphics(shadowGraphics, shadowShader);
+  
+  // Avalanche shader parameters
+  avalancheShader = loadShader("avalanche_shader.glsl");
+  avalancheShader.set("iResolution", (float) width, (float) height, 0.0);
+  avalancheShader.set("exchangeTexture", sandExchangeGraphics);
+  avalancheShader.set("windDir", windDir.x, windDir.y);
+  avalancheShader.set("hopDist", hopDist);
+  avalancheShader.set("maxHops", (float) maxHops);
+  avalancheShader.set("grainSize", grainSize);
+  avalancheGraphics = createGraphics(width, height, P2D);
 }
 
 
 void draw(){
+  
+  //println(frameCount);
   
   // ===== Analyze sound =====
   //if(frameCount > 30){
@@ -299,35 +378,27 @@ void draw(){
   noiseModGraphics.endDraw();
   
   // Update noise shader
-  noiseShader.set("iTime", float(frameCount));
+  noiseShader.set("iTime", (float) frameCount);
   noiseShader.set("hardThreshTexture", noiseModGraphics);
   noiseShader.set("probModEdges", probModEdge1, probModEdge2);
   
   // Draw noise for selection probs
-  noiseGraphics.beginDraw();
-  noiseGraphics.shader(noiseShader);
-  noiseGraphics.fill(0);
-  noiseGraphics.rect(0, 0, width, height);
-  noiseGraphics.endDraw();
+  renderGraphics(noiseGraphics, noiseShader);
   
   // Pass selection noise
   shader.set("noiseTexture1", noiseGraphics);
   
   // Update noise shader
-  noiseShader.set("iTime", float(frameCount+100000));
+  noiseShader.set("iTime", frameCount + noiseTimeBiasA);
   
-  // Draw noise for acceptance probs
-  noiseGraphics.beginDraw();
-  noiseGraphics.shader(noiseShader);
-  noiseGraphics.fill(0);
-  noiseGraphics.rect(0, 0, width, height);
-  noiseGraphics.endDraw();
+  // Redraw noise for acceptance probs
+  renderGraphics(noiseGraphics, noiseShader);
   
   // Pass acceptance test noise
   shader.set("noiseTexture2", noiseGraphics);
   
   // Compute glyph texture
-  if (glyphTextureCtrlIdx > 0 || glyphOverlay){
+  if (glyphTextureCtrlIdx > 0 || glyphOverlay || toggleSelDensMod){
     noiseSeed(13);
     glyphSeedA = 2.0*noise(frameCount*0.002);
     noiseSeed(24);
@@ -340,11 +411,7 @@ void draw(){
     glyphShaderOverlay.set("iSeedB", glyphSeedB);
     glyphShaderOverlay.set("iRepeat", glyphRepeatX, glyphRepeatY);
     
-    glyphGraphicsTexCtrl.beginDraw();
-    glyphGraphicsTexCtrl.shader(glyphShaderTexCtrl);
-    glyphGraphicsTexCtrl.fill(0);
-    glyphGraphicsTexCtrl.rect(0, 0, width, height);
-    glyphGraphicsTexCtrl.endDraw();
+    renderGraphics(glyphGraphicsTexCtrl, glyphShaderTexCtrl);
   }
   
   // Pass parameter textures
@@ -386,35 +453,86 @@ void draw(){
   //fill(0);
   //rect(0, 0, width, height);
   
+  renderGraphics(glyphGraphicsOverlay, glyphShaderOverlay);
+  
   // ===========================
   // MAIN PATTERN
   // ===========================
   
-  shader.set("xyModelToggle", xyToggle);
-  shader.set("iTime", float(frameCount+12345));
-  shader.set("xyBlend", xyBlend);
-  shader.set("noiseBlend", noiseBlend);
-  shader.set("invert", invertSpins);
-  shader.set("quantNoise", quantizeNoise);
-  
-  // Draw spins
-  //if (viewNoise){
-  //  image(noiseGraphics, 0, 0);
-  //} else {
-  spinGraphics.beginDraw();
-  spinGraphics.shader(shader);
-  if (invertSpins){
-    invertSpins = false;
+  if (toggleSandDunes)
+  {
+    // Update selection noise
+    noiseShader.set("iTime", (float) frameCount);
+    renderGraphics(noiseGraphics, noiseShader);
+    sandProjShader.set("noiseTextureSel", noiseGraphics);
+    
+    // Update deposition noise
+    noiseShader.set("iTime", float(frameCount) + noiseTimeBiasA);
+    renderGraphics(noiseGraphics, noiseShader);
+    sandProjShader.set("noiseTextureDeposit", noiseGraphics);
+    
+    // Update shadow calculation
+    shadowShader.set("heightTexture", sandExchangeGraphics);
+    renderGraphics(shadowGraphics, shadowShader);
+    
+    // Pass textures to sand projection shader
+    sandProjShader.set("heightTexture", sandExchangeGraphics);
+    sandProjShader.set("shadowTexture", shadowGraphics);
+    if (toggleSelDensMod) {
+      sandProjShader.set("selDensityTexture", glyphGraphicsOverlay);
+    } else {
+      sandProjShader.set("selDensityTexture", blankGraphicsMid);
+    }
+    
+    // Compute sand deposition
+    renderGraphics(sandProjGraphics, sandProjShader);
+    
+    // Compute avalanches
+    avalancheShader.set("remoteDepositTexture", sandProjGraphics);
+    avalancheShader.set("exchangeTexture", sandExchangeGraphics);
+    for (int i = 0; i < maxAvalancheSteps; i++)
+    {
+      // Update avalanche noise
+      noiseShader.set("iTime", float(frameCount * maxAvalancheSteps) + noiseTimeBiasB + i);
+      renderGraphics(noiseGraphics, noiseShader);
+      //noiseGraphicsAvalanche.save("noiseGraphicsAvalanche_" + str(i) + "_" + nf(frameCount, 5) + ".tiff");
+      
+      avalancheShader.set("noiseTexture", noiseGraphics);
+      renderGraphics(avalancheGraphics, avalancheShader);
+      //avalancheGraphics.save("avalancheGraphics_" + str(i) + "_" + nf(frameCount, 5) + ".tiff");
+      
+      avalancheShader.set("remoteDepositTexture", blankGraphicsZero);
+      avalancheShader.set("exchangeTexture", avalancheGraphics);
+    }
+    
+    // Final sand exchange
+    sandExchangeShader.set("exchangeTexture", avalancheGraphics);
+    renderGraphics(sandExchangeGraphics, sandExchangeShader);
+    
+    sandConvertShader.set("heightTexture", sandExchangeGraphics);
+    renderGraphics(spinGraphics, sandConvertShader);
   }
-  spinGraphics.fill(0);
-  spinGraphics.rect(0, 0, width, height);
-  spinGraphics.endDraw();
+  else
+  {
+    shader.set("xyModelToggle", xyToggle);
+    shader.set("iTime", float(frameCount) + noiseTimeBiasB);
+    shader.set("xyBlend", xyBlend);
+    shader.set("noiseBlend", noiseBlend);
+    shader.set("invert", invertSpins);
+    shader.set("quantNoise", quantizeNoise);
+    
+    // Draw spins
+    if (invertSpins){
+      invertSpins = false;
+    }
+    renderGraphics(spinGraphics, shader);
+  }
+  
   image(spinGraphics, 0, 0);
-  //}
   
   // Feed spin image back to shader
   shader.set("spinTexture", spinGraphics);
-  
+    
   // Plot histogram
   //loadPixels();
   //for (int i = 0; i < pixels.length; i++){
@@ -441,11 +559,7 @@ void draw(){
   
   // Glyph overlay
   if (glyphOverlay){
-    glyphGraphicsOverlay.beginDraw();
-    glyphGraphicsOverlay.shader(glyphShaderOverlay);
-    glyphGraphicsOverlay.fill(0);
-    glyphGraphicsOverlay.rect(0, 0, width, height);
-    glyphGraphicsOverlay.endDraw();
+    //renderGraphics(glyphGraphicsOverlay, glyphShaderOverlay);
     blendMode(MULTIPLY);
     image(glyphGraphicsOverlay, 0, 0);
     blendMode(BLEND);
@@ -545,6 +659,10 @@ void keyPressed(){
     // Flip noise probability modulation
     invertSpins = !invertSpins;
      shader.set("spinTexture", spinGraphics);
+  }
+  if(key == 'U' || key == 'u'){
+    // Toggle sand dune algorithm
+    toggleSandDunes = !toggleSandDunes;
   }
   if(key == 'S' || key == 's'){
     // Screenshot

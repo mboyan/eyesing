@@ -25,7 +25,7 @@ uniform vec2 windDir;
 uniform float hopDist;
 
 const float shadowStepSize = 0.5;
-const float maxShadowDist = 100;//1920 * 1080;
+const float maxShadowDist = 200;//1920 * 1080;
 const int nShadowSteps = int(floor(maxShadowDist / shadowStepSize));
 const float shadowFactor = tan(PI / 12.); // corresponds to 15 degrees
 

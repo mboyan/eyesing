@@ -5,7 +5,7 @@ precision mediump float;
 precision mediump int;
 #endif
 
-#define PROCESSING_COLOR_SHADER;
+#define PROCESSING_COLOR_SHADER
 
 // ----------------------
 // -      UNIFORMS      -
@@ -19,13 +19,15 @@ uniform vec4      iMouse;                // mouse pixel coords. xy: current (if 
 uniform vec4      iDate;                 // (year, month, day, time in seconds)
 
 uniform sampler2D heightTexture;
-uniform sampler2D noiseTexture;
+uniform sampler2D shadowTexture;
+uniform sampler2D noiseTextureSel;
+uniform sampler2D noiseTextureDeposit;
+uniform sampler2D selDensityTexture;
 
 uniform vec2 windDir;
-uniform float selDensity;
+// uniform float selDensity;
 uniform float hopDist;
-
-const int maxHops = 100;
+uniform float maxHops;
 
 void main(){
 	vec2 st = gl_FragCoord.xy/iResolution.xy;
@@ -33,35 +35,62 @@ void main(){
     // Get sand height
     float sandHeight = texture2D(heightTexture, st).x;
 
-    // Calculate normalised wind direction
-    vec2 normWindDir = normalize(windDir);
-
     // Select sand grains
-    float sel = step(selDensity, texture2D(noiseTexture, st).x);
+    float selDensity = texture2D(selDensityTexture, st).x;
+    float selNoiseSample = texture2D(noiseTextureSel, st).x;
+    float sel = step(selDensity, selNoiseSample);
     float sandCovered = 1.0 - step(0.0, -sandHeight);
     sel *= sandCovered;
 
-    // Check if in shadow against wind direction
-    float maxShadowDist = length(iResolution.xy);
-    float shadowStepSize = 0.1;
-    int shadowSteps = floor(maxShadowDist / shadowStepSize);
-    float shadow = 0.0;
-    vec2 shadowProbePos = gl_FragCoord.xy;
-    float shadowProbeVal = 0.0;
-    for(int i = 0; i < shadowSteps; ++i)
+    float nHopsDeposited = 0.0;
+    if (sel > 0.5)
     {
-        shadowProbePos = round(shadowProbePos - shadowStepSize * normWindDir);
-        // GUARD AGAINST OUT-OF-BOUNDS!!!!
-        shadowProbeVal = texture2D(heightTexture, shadowProbePos / iResolution.xy).x;
-        shadow = step(0.5, 1.0 - shadow) * step(i * shadowStepSize, shadowProbeVal); // shadow turns true if height is larger than distance from source
-    }
+        float shadow = texture2D(shadowTexture, st).x;
 
-    // Determine number of windward hops
-    vec2 newPos = gl_FragCoord.xy;
-    for(int i = 0; i < maxHops; ++i)
+        // Determine number of windward hops
+        vec2 newPosCandidate;
+        vec2 stCandidate;
+        float newPosHeight;
+        float depositProb;
+        float candidateShadow;
+        float depositTry = 0.0;
+        float depositHit, firstDeposit;
+        float deposited = 0.0;
+        
+        for(int i = 0; i < maxHops; ++i)
+        {
+            newPosCandidate = gl_FragCoord.xy + (i + 1) * hopDist * windDir;
+            stCandidate = newPosCandidate / iResolution.xy;
+
+            // Probe new position
+            newPosHeight = texture2D(heightTexture, stCandidate).x;
+            
+            // Check if candidate in shadow
+            candidateShadow = texture2D(shadowTexture, stCandidate).x;
+
+            // Deposition probability: 0.4 (bare) / 0.6 (covered) / 1.0 (in shadow)
+            depositProb = mix(mix(0.6, 0.4, step(0.0, -newPosHeight)), 1.0, candidateShadow);
+            depositTry = fract(texture2D(noiseTextureDeposit, st).x + texture2D(noiseTextureDeposit, stCandidate).x + 73.3247418*selNoiseSample*selNoiseSample*i);
+            depositHit = step(depositTry, depositProb) * (1.0 - step(1.0, newPosHeight)); // zero if candidate has full height
+            firstDeposit = (1.0 - deposited) * depositHit;
+
+            // Save number of hops until deposition
+            nHopsDeposited = mix(nHopsDeposited, (i + 1) / maxHops, firstDeposit);
+
+            // Update deposited state
+            deposited = max(deposited, depositHit);
+
+            if (depositHit > 0.5) {
+                nHopsDeposited = float(i + 1) / maxHops;
+                break;
+            }
+        }
+    }
+    else
     {
-        newPos = round(newPos + hopDist * windDir);
-
-        // Probe new position
+        nHopsDeposited = 0;
     }
+    
+
+    gl_FragColor = vec4(vec3(nHopsDeposited * sel), 1.0);
 }

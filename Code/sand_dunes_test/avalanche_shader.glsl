@@ -27,8 +27,10 @@ uniform sampler2D noiseTexture;
 uniform vec2 windDir;
 uniform float hopDist;
 uniform float maxHops;
+uniform float grainSize;
 
-const float grainSize = 1.0 / 16.0;//15.0 / 255.0;//256.0;
+// const float grainSize = 1.0 / 32.0;//15.0 / 255.0;//256.0;
+const float valRatio = 256./248.;
 
 const ivec2 offsets[8] = ivec2[8](
     ivec2(1, 0),
@@ -40,17 +42,6 @@ const ivec2 offsets[8] = ivec2[8](
     ivec2(0, -1),
     ivec2(1, -1)
 );
-
-// const ivec2 offsets[8] = ivec2[8](
-//     ivec2(1, 0),
-//     ivec2(1, -1),
-//     ivec2(0, -1),
-//     ivec2(-1, -1),
-//     ivec2(-1, 0),
-//     ivec2(-1, 1),
-//     ivec2(0, 1),
-//     ivec2(1, 1)
-// );
 
 void main(){
     vec2 st = gl_FragCoord.xy/iResolution.xy;
@@ -68,9 +59,7 @@ void main(){
     for(int i = 0; i < maxHops; ++i)
     {
         posCheck = gl_FragCoord.xy - round((i + 1) * hopDist * windDir);
-
-        nHopsCheck = int(texture2D(remoteDepositTexture, posCheck / iResolution.xy).x * maxHops);
-
+        nHopsCheck = int(round(texture2D(remoteDepositTexture, posCheck / iResolution.xy).x * maxHops));
         depositWind += step(0.0, -float(abs(i + 1 - nHopsCheck)));
     }
 
@@ -79,7 +68,6 @@ void main(){
     // Check if site is being deposited on or eroded by avalanche
     vec2 nbOffset;
     float iCompare;
-    vec2 iDiff;
     vec2 exchangeTextureSample = texture2D(exchangeTexture, st).yz;
     float erodeAvalanche = 1.0 - step(0.0, -exchangeTextureSample.x);
     float depositAvalanche = 1.0 - step(0.0, -exchangeTextureSample.y);
@@ -88,19 +76,15 @@ void main(){
         nbOffset = vec2(offsets[i]);
 
         // For this neighbour, get the angle index of deposition/erosion
-        exchangeTextureSample = texture2D(exchangeTexture, (gl_FragCoord.xy + nbOffset) / iResolution.xy).yz;
+        exchangeTextureSample = texture2D(exchangeTexture, (gl_FragCoord.xy + nbOffset) / iResolution.xy).yz * valRatio;
 
         // Erode to this neighbour
         iCompare = round(exchangeTextureSample.y * 8. - 1.);
         erodeAvalanche += step(0.0, -abs(float(i) - mod(iCompare + 4., 8.))) * step(0.0, iCompare);
-        // iDiff = nbOffset + vec2(offsets[int(max(0.0, iCompare))]);
-        // erodeAvalanche += step(0.0, -abs(iDiff.x)) * step(0.0, -abs(iDiff.y)) * step(0.0, iCompare);
         
         // Deposit from this neighbour
         iCompare = round(exchangeTextureSample.x * 8. - 1.);
         depositAvalanche += step(0.0, -abs(float(i) - mod(iCompare + 4., 8.))) * step(0.0, iCompare);
-        // iDiff = nbOffset + vec2(offsets[int(max(0.0, iCompare))]);
-        // depositAvalanche += step(0.0, -abs(iDiff.x)) * step(0.0, -abs(iDiff.y)) * step(0.0, iCompare);
     }
 
     sandHeight += depositAvalanche * grainSize;
@@ -161,7 +145,8 @@ void main(){
         lowDeposit = highDeposit;
     }
 
+    // Correct for 255-encoded values
+    avalancheIndicator *= 0.96875;
+
     gl_FragColor = vec4(sandHeight, avalancheIndicator * (1.0 - step(0.0, - (erodeWind + depositWind + erodeAvalanche + depositAvalanche))), 1.0);
-    // gl_FragColor = vec4(sandHeight, avalancheIndicator * (1.0 - step(0.0, - (erodeWind + depositWind))), 1.0);
-    // gl_FragColor = vec4(sandHeight, avalancheIndicator, 1.0);
 }
