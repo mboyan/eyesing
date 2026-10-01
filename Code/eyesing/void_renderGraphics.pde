@@ -1,8 +1,7 @@
 // Renders blank graphics with a constant value
 void renderGraphics(PGraphics graphics, int val){
   graphics.beginDraw();
-  graphics.fill(val);
-  graphics.rect(0, height, width, -height);
+  graphics.background(val);
   graphics.endDraw();
 }
 

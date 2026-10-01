@@ -63,14 +63,14 @@ boolean xyToggle = true;
 float xyBlend = 1.0;
 
 // Sand dune model variables
-boolean toggleSandDunes = false;
+boolean toggleSandDunes = true;
 PVector windDir = new PVector(0.0, 1.0).normalize();
 float hopDist = 15.0;
 int maxHops = 17;
 int maxAvalancheSteps = 2;
 float grainSize = 1.0 / 32.0;
 //float selDensity = 0.75;
-boolean toggleSelDensMod = true;
+boolean toggleSelDensMod = false;
 
 // MIDI
 MidiBus f1Bus, x1Bus;
@@ -198,17 +198,9 @@ void setup(){
   modD = 0;
   
   // Draw default parameter graphics
-  paramGraphicsA.beginDraw();
-  paramGraphicsA.background(127);
-  paramGraphicsA.endDraw();
-  
-  paramGraphicsB.beginDraw();
-  paramGraphicsB.background(127);
-  paramGraphicsB.endDraw();
-  
-  paramGraphicsC.beginDraw();
-  paramGraphicsC.background(127);
-  paramGraphicsC.endDraw();
+  renderGraphics(paramGraphicsA, 127);
+  renderGraphics(paramGraphicsB, 127);
+  renderGraphics(paramGraphicsC, 127);
   
   // Initialize glyph shader
   glyphShaderTexCtrl = loadShader("glyph_shader.glsl");
@@ -235,7 +227,7 @@ void setup(){
   probModEdge2 = sqrt(2);
   
   // Draw initial spin graphics
-  renderGraphics(spinGraphics, shader);
+  if (toggleSandDunes) renderGraphics(spinGraphics, shader);
   
   // Sand exchange and output shader parameters
   sandExchangeShader = loadShader("sand_exchange.glsl");
