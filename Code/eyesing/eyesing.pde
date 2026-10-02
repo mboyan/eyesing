@@ -34,7 +34,7 @@ Minim minim;
 FFT fft;
 //AudioPlayer in;
 AudioInput in;
-boolean audioReact = false;
+boolean audioReact = true;
 float[] bands;
 int bandShiftIdx;
 float[] lvlThresh = {2.0, 0.5, 0.25, 0.125};
@@ -44,7 +44,7 @@ boolean glyphOverlay = false;
 float glyphSeedA, glyphSeedB;
 float glyphRepeatX = 1;
 float glyphRepeatY = 1;
-int glyphTextureCtrlIdx = 0; // 0 for none, 1 for beta, 2 for field, 3 for interact
+int glyphTextureCtrlIdx = 2; // 0 for none, 1 for beta, 2 for field, 3 for interact
 
 // Video reading
 Movie video;
@@ -70,7 +70,7 @@ int maxHops = 17;
 int maxAvalancheSteps = 2;
 float grainSize = 1.0 / 32.0;
 //float selDensity = 0.75;
-boolean toggleSelDensMod = true;
+boolean toggleSelDensMod = false;
 
 // MIDI
 MidiBus f1Bus, x1Bus;
@@ -592,20 +592,20 @@ void draw(){
       noStroke();
       rectMode(CORNER);
       if(bands[0] < lvlThresh[0]){
-        rect(screenScanner.pos.x + screenScanner.winSize*0.5, screenScanner.pos.y, 2*width, 2*height);
-        rect(screenScanner.pos.x, screenScanner.pos.y + screenScanner.winSize*0.5, 2*width, 2*height);
+        rect(screenScanner.pos.x + screenScanner.winSize*0.5, screenScanner.pos.y, screenScanner.maskWidth, screenScanner.maskWidth + screenScanner.winSize*0.5);
+        rect(screenScanner.pos.x, screenScanner.pos.y + screenScanner.winSize*0.5, screenScanner.maskWidth, screenScanner.maskWidth);
       }
       if(bands[1] < lvlThresh[1]){
-        rect(screenScanner.pos.x + screenScanner.winSize*0.5, screenScanner.pos.y, 2*width, -2*height);
-        rect(screenScanner.pos.x, screenScanner.pos.y - screenScanner.winSize*0.5, 2*width, -2*height);
+        rect(screenScanner.pos.x + screenScanner.winSize*0.5, screenScanner.pos.y, screenScanner.maskWidth, -screenScanner.maskWidth - screenScanner.winSize*0.5);
+        rect(screenScanner.pos.x, screenScanner.pos.y - screenScanner.winSize*0.5, screenScanner.maskWidth, -screenScanner.maskWidth);
       }
       if(bands[2] < lvlThresh[2]){
-        rect(screenScanner.pos.x - screenScanner.winSize*0.5, screenScanner.pos.y, -2*width, 2*height);
-        rect(screenScanner.pos.x, screenScanner.pos.y + screenScanner.winSize*0.5, -2*width, 2*height);
+        rect(screenScanner.pos.x - screenScanner.winSize*0.5, screenScanner.pos.y, -screenScanner.maskWidth, screenScanner.maskWidth + screenScanner.winSize*0.5);
+        rect(screenScanner.pos.x, screenScanner.pos.y + screenScanner.winSize*0.5, -screenScanner.maskWidth, screenScanner.maskWidth);
       }
       if(bands[3] < lvlThresh[3]){
-        rect(screenScanner.pos.x - screenScanner.winSize*0.5, screenScanner.pos.y, -2*width, -2*height);
-        rect(screenScanner.pos.x, screenScanner.pos.y - screenScanner.winSize*0.5, -2*width, -2*height);
+        rect(screenScanner.pos.x - screenScanner.winSize*0.5, screenScanner.pos.y, -screenScanner.maskWidth, -screenScanner.maskWidth - screenScanner.winSize*0.5);
+        rect(screenScanner.pos.x, screenScanner.pos.y - screenScanner.winSize*0.5, -screenScanner.maskWidth, -screenScanner.maskWidth);
       }
       if (screenScanner.toggleRotate) {
         popMatrix();

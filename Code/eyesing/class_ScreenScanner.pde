@@ -2,7 +2,7 @@ class ScreenScanner{
   
   PVector pos, vec;
   //PVector penaltyVec;
-  float winSize;
+  float winSize, maskWidthFactor, maskWidth;
   float stepSize = 10.0;
   int seedX, seedY, seedZ;
   float orientX, orientY, orientZ;
@@ -28,6 +28,9 @@ class ScreenScanner{
     showLargeFrame = false;
     showCross = true;
     toggleRotate = true;
+    
+    maskWidthFactor = 0.05;
+    maskWidth = maskWidthFactor*width;
   }
   
   void updatePos(){
@@ -87,6 +90,7 @@ class ScreenScanner{
       stroke(0, gradient, gradient*0.5, gradient);
       strokeWeight(i*2 + 1);
       rect(pos.x, pos.y, winSize, winSize);
+      rect(pos.x, pos.y, winSize+2*maskWidth, winSize+2*maskWidth);
       
       if (showCross) {
         line(pos.x + 0.5*winSize, pos.y, 2*width, pos.y);

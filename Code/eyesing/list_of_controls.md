@@ -6,6 +6,10 @@ scannerCtrl - bool X \[X1 FX2 right]
 
 scannerAdapt - bool X \[X1 FX3 right]
 
+toggleRotate - bool ????????
+
+maskWidthFactor - float ???????
+
 
 
 ===LINE TEXTURE CONTROLS===
