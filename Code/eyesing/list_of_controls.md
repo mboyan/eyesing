@@ -1,12 +1,12 @@
 ===SCANNER CONTROLS===
 
-scanToggle - bool X \[X1 FX1 right]
+scanToggle - bool X \[X1 MODE right]
 
-scannerCtrl - bool X \[X1 FX2 right]
+scannerCtrl - bool X \[X1 FX1 right]
 
-scannerAdapt - bool X \[X1 FX3 right]
+scannerAdapt - bool X \[X1 FX2 right]
 
-toggleRotate - bool ????????
+toggleRotate - bool \[X1 fx1 left]
 
 maskWidthFactor - float ???????
 
@@ -72,7 +72,7 @@ glyphTextureCtrlIdx - int X \[X1 numbers right]
 
 videoTextureParamControl - bool X \[X1 FX2 left]
 
-videoInvert - bool X \[X1 FX2 left]
+videoInvert - bool X \[X1 FX3 left]
 
 videoIdx - int X \[F1 taps 5-8]
 
@@ -94,7 +94,7 @@ quantizeNoise - bool X \[F1 small knob push]
 
 ===XY-MODEL===
 
-xyToggle - bool X \[X1 Mode left]
+xyToggle - bool X \[X1 MODE left]
 
 xyBlend - float X \[X1 knob 2 left]
 
@@ -108,5 +108,5 @@ fieldCtrl - float
 
 interactCtrl - float
 
-invertSpins - bool X \[X1 Mode right]
+invertSpins - bool X \[X1 FX3 right]
 
