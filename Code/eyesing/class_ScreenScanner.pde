@@ -30,7 +30,6 @@ class ScreenScanner{
     toggleRotate = true;
     
     maskWidthFactor = 0.05;
-    maskWidth = maskWidthFactor*width;
   }
   
   void updatePos(){
@@ -75,6 +74,40 @@ class ScreenScanner{
   }
   
   void show(){
+    maskWidth = maskWidthFactor*width;
+    
+    // Flicker bands
+    if(audioReact){
+      if (toggleRotate) {
+        pushMatrix();
+        translate(pos.x, pos.y);
+        rotate(QUARTER_PI);
+        translate(-pos.x, -pos.y);
+      }
+      fill(0);
+      noStroke();
+      rectMode(CORNER);
+      if(bands[0] < lvlThresh[0]){
+        rect(pos.x + winSize*0.5, pos.y, maskWidth, maskWidth + winSize*0.5);
+        rect(pos.x, pos.y + winSize*0.5, maskWidth + winSize*0.5, maskWidth);
+      }
+      if(bands[1] < lvlThresh[1]){
+        rect(pos.x + winSize*0.5, pos.y, maskWidth, -maskWidth - winSize*0.5);
+        rect(pos.x, pos.y - winSize*0.5, maskWidth + winSize*0.5, -maskWidth);
+      }
+      if(bands[2] < lvlThresh[2]){
+        rect(pos.x - winSize*0.5, pos.y, -maskWidth, maskWidth + winSize*0.5);
+        rect(pos.x, pos.y + winSize*0.5, -maskWidth - winSize*0.5, maskWidth);
+      }
+      if(bands[3] < lvlThresh[3]){
+        rect(pos.x - winSize*0.5, pos.y, -maskWidth, -maskWidth - winSize*0.5);
+        rect(pos.x, pos.y - winSize*0.5, -maskWidth - winSize*0.5, -maskWidth);
+      }
+      if (toggleRotate) {
+        popMatrix();
+      }
+    }
+    
     //stroke(255, 0, 0, 100);
     noFill();
     rectMode(CENTER);

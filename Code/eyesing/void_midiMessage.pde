@@ -45,6 +45,10 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
       video = new Movie(this, videoTitles[chan - 10]);
       video.loop();
     }
+    else if (chan == 18 && val == 127){
+      screenScanner.toggleRotate = !screenScanner.toggleRotate;
+      println("toggleRotate: " + str(screenScanner.toggleRotate));
+    }
     else if (chan == 37 && val == 127) {
       modA = 255 - modA;
     }
@@ -56,6 +60,9 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
     }
     else if (chan == 40 && val == 127) {
       modD = 255 - modD;
+    }
+    else if (chan == 41) {
+      screenScanner.maskWidthFactor = val / 127.0;
     }
     else if (chan == 42 && val == 127) {
       quantizeNoise = !quantizeNoise;
@@ -101,9 +108,21 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
       audioReact = !audioReact;
       println("audioReact: " + str(audioReact));
     }
-    else if (chan == 20){
-      screenScanner.toggleRotate = !screenScanner.toggleRotate;
-      println("toggleRotate: " + str(screenScanner.toggleRotate));
+    else if (chan == 18){
+      maxAvalancheSteps = max(maxAvalancheSteps - 1, 1);
+      println("maxAvalancheSteps: " + str(maxAvalancheSteps));
+    }
+    else if (chan == 19){
+      maxAvalancheSteps = min(maxAvalancheSteps + 1, 10);
+      println("maxAvalancheSteps: " + str(maxAvalancheSteps));
+    }
+    else if (chan == 26){
+      toggleSandDunes = !toggleSandDunes;
+      println("toggleSandDunes: " + str(toggleSandDunes));
+    }
+    else if (chan == 27){
+      toggleSelDensMod = !toggleSelDensMod;
+      println("toggleSelDensMod: " + str(toggleSelDensMod));
     }
     else if (chan == 30) {
       glyphRepeatX = 1;
@@ -165,6 +184,16 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
     }
     else if (chan == 16) {
       bandShiftIdx = (val == 127) ? (bandShiftIdx + 1)%4 : (4 + bandShiftIdx - 1)%4;
+    }
+    else if (chan == 24) {
+      windDirAngleIdx += (val == 127) ? -1 : 1;
+      windDir = new PVector(cos(TWO_PI*windDirAngleIdx/360.0), sin(TWO_PI*windDirAngleIdx/360.0));
+      println("windDirAngleIdx: " + str(windDirAngleIdx));
+    }
+    else if (chan == 25) {
+      hopDist += (val == 127) ? -1.0 : 1.0;
+      hopDist = min(max(hopDist, 1.0), width*0.5);
+      println("hopDist: " + str(hopDist));
     }
   }
 }

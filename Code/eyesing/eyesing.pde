@@ -42,7 +42,7 @@ float[] lvlThresh = {2.0, 0.5, 0.25, 0.125};
 // WPF glyph controls
 boolean glyphOverlay = false;
 float glyphSeedA, glyphSeedB;
-float glyphRepeatX = 1;
+float glyphRepeatX = 3;
 float glyphRepeatY = 1;
 int glyphTextureCtrlIdx = 2; // 0 for none, 1 for beta, 2 for field, 3 for interact
 
@@ -65,6 +65,7 @@ float xyBlend = 1.0;
 // Sand dune model variables
 boolean toggleSandDunes = false;
 PVector windDir = new PVector(1.0, 0.0).normalize();
+int windDirAngleIdx = 0;
 float hopDist = 15.0;
 int maxHops = 17;
 int maxAvalancheSteps = 2;
@@ -86,7 +87,8 @@ void setup(){
   //size(540, 810, P2D);
   //size(1080, 360, P2D);
   //size(1754, 1240, P2D); // A4 150dpi
-  fullScreen(P2D, 2);
+  size(1500, 500, P2D);
+  //fullScreen(P2D, 2);
   //fullScreen(P2D);
   pixelDensity(1); // For Processing 4.5.2
   textureWrap(REPEAT);
@@ -467,6 +469,7 @@ void draw(){
     
     // Update shadow calculation
     shadowShader.set("heightTexture", sandExchangeGraphics);
+    shadowShader.set("windDir", windDir.x, windDir.y);
     renderGraphics(shadowGraphics, shadowShader);
     
     // Pass textures to sand projection shader
@@ -477,6 +480,7 @@ void draw(){
     } else {
       sandProjShader.set("selDensityTexture", blankGraphicsMid);
     }
+    sandProjShader.set("windDir", windDir.x, windDir.y);
     
     // Compute sand deposition
     renderGraphics(sandProjGraphics, sandProjShader);
@@ -484,6 +488,7 @@ void draw(){
     // Compute avalanches
     avalancheShader.set("remoteDepositTexture", sandProjGraphics);
     avalancheShader.set("exchangeTexture", sandExchangeGraphics);
+    avalancheShader.set("windDir", windDir.x, windDir.y);
     for (int i = 0; i < maxAvalancheSteps; i++)
     {
       // Update avalanche noise
@@ -579,38 +584,6 @@ void draw(){
     //text(str(screenScanner.pos.z), 50, 120);
     
     screenScanner.updatePos();
-    
-    // Flicker bands
-    if(audioReact){
-      if (screenScanner.toggleRotate) {
-        pushMatrix();
-        translate(screenScanner.pos.x, screenScanner.pos.y);
-        rotate(QUARTER_PI);
-        translate(-screenScanner.pos.x, -screenScanner.pos.y);
-      }
-      fill(0);
-      noStroke();
-      rectMode(CORNER);
-      if(bands[0] < lvlThresh[0]){
-        rect(screenScanner.pos.x + screenScanner.winSize*0.5, screenScanner.pos.y, screenScanner.maskWidth, screenScanner.maskWidth + screenScanner.winSize*0.5);
-        rect(screenScanner.pos.x, screenScanner.pos.y + screenScanner.winSize*0.5, screenScanner.maskWidth, screenScanner.maskWidth);
-      }
-      if(bands[1] < lvlThresh[1]){
-        rect(screenScanner.pos.x + screenScanner.winSize*0.5, screenScanner.pos.y, screenScanner.maskWidth, -screenScanner.maskWidth - screenScanner.winSize*0.5);
-        rect(screenScanner.pos.x, screenScanner.pos.y - screenScanner.winSize*0.5, screenScanner.maskWidth, -screenScanner.maskWidth);
-      }
-      if(bands[2] < lvlThresh[2]){
-        rect(screenScanner.pos.x - screenScanner.winSize*0.5, screenScanner.pos.y, -screenScanner.maskWidth, screenScanner.maskWidth + screenScanner.winSize*0.5);
-        rect(screenScanner.pos.x, screenScanner.pos.y + screenScanner.winSize*0.5, -screenScanner.maskWidth, screenScanner.maskWidth);
-      }
-      if(bands[3] < lvlThresh[3]){
-        rect(screenScanner.pos.x - screenScanner.winSize*0.5, screenScanner.pos.y, -screenScanner.maskWidth, -screenScanner.maskWidth - screenScanner.winSize*0.5);
-        rect(screenScanner.pos.x, screenScanner.pos.y - screenScanner.winSize*0.5, -screenScanner.maskWidth, -screenScanner.maskWidth);
-      }
-      if (screenScanner.toggleRotate) {
-        popMatrix();
-      }
-    }
     screenScanner.show();
     
     // Adapt scanner motion

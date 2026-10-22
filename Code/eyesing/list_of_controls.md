@@ -6,9 +6,9 @@ scannerCtrl - bool X \[X1 FX1 right]
 
 scannerAdapt - bool X \[X1 FX2 right]
 
-toggleRotate - bool \[X1 fx1 left]
+toggleRotate - bool X \[F1 browse]
 
-maskWidthFactor - float ???????
+maskWidthFactor - float X \[F1 select knob]
 
 
 
@@ -97,6 +97,20 @@ quantizeNoise - bool X \[F1 small knob push]
 xyToggle - bool X \[X1 MODE left]
 
 xyBlend - float X \[X1 knob 2 left]
+
+
+
+===SAND DUNE MODEL===
+
+toggleSandDunes - bool \[X1 loop knob left push]
+
+windDirAngleIdx - int \[X1 loop knob left]
+
+hopDist - float \[X1 loop knob right]
+
+maxAvalancheSteps - int \[X1 arrows]
+
+toggleSelDensMod - bool \[X1 loop knob push]
 
 
 
