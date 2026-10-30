@@ -42,7 +42,7 @@ float[] lvlThresh = {2.0, 0.5, 0.25, 0.125};
 // WPF glyph controls
 boolean glyphOverlay = false;
 float glyphSeedA, glyphSeedB;
-float glyphRepeatX = 3;
+float glyphRepeatX = 1;
 float glyphRepeatY = 1;
 int glyphTextureCtrlIdx = 2; // 0 for none, 1 for beta, 2 for field, 3 for interact
 
@@ -78,7 +78,7 @@ MidiBus f1Bus, x1Bus;
 
 void setup(){
   
-  //size(540, 540, P2D);
+  size(540, 540, P2D);
   //size(800, 800, P2D);
   //size(1080, 1350, P2D); // 4:5 format
   //size(1350, 1080, P2D); // 5:4 format
@@ -87,7 +87,7 @@ void setup(){
   //size(540, 810, P2D);
   //size(1080, 360, P2D);
   //size(1754, 1240, P2D); // A4 150dpi
-  size(1500, 500, P2D);
+  //size(1500, 500, P2D);
   //fullScreen(P2D, 2);
   //fullScreen(P2D);
   pixelDensity(1); // For Processing 4.5.2
