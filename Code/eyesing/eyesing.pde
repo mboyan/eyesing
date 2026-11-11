@@ -78,9 +78,9 @@ MidiBus f1Bus, x1Bus;
 
 void setup(){
   
-  size(540, 540, P2D);
+  //size(540, 540, P2D);
   //size(800, 800, P2D);
-  //size(1080, 1350, P2D); // 4:5 format
+  size(1080, 1350, P2D); // 4:5 format
   //size(1350, 1080, P2D); // 5:4 format
   //size(1600, 1600, P2D);
   //size(1920, 1080, P2D);
@@ -222,7 +222,7 @@ void setup(){
   //video = new Movie(this, "cymatique_edited.mp4");
   video.loop();
   
-  inputImg = loadImage("rnkic_intro.jpg");
+  inputImg = loadImage("lulu_intro.jpg");
   //inputImg.filter(INVERT);
   
   // Noise probability modulation
@@ -416,12 +416,12 @@ void draw(){
     if (videoInvert) {
       video.filter(INVERT);
     }
-    shader.set("paramTextureBeta", video);
-    shader.set("paramTextureField", video);
-    shader.set("paramTextureInteract", video);
-    //shader.set("paramTextureBeta", inputImg);
-    //shader.set("paramTextureField", inputImg);
-    //shader.set("paramTextureInteract", inputImg);
+    //shader.set("paramTextureBeta", video);
+    //shader.set("paramTextureField", video);
+    //shader.set("paramTextureInteract", video);
+    shader.set("paramTextureBeta", inputImg);
+    shader.set("paramTextureField", inputImg);
+    shader.set("paramTextureInteract", inputImg);
   } else {
     if (glyphTextureCtrlIdx == 1){
       shader.set("paramTextureBeta", glyphGraphicsTexCtrl);
@@ -476,7 +476,12 @@ void draw(){
     sandProjShader.set("heightTexture", sandExchangeGraphics);
     sandProjShader.set("shadowTexture", shadowGraphics);
     if (toggleSelDensMod) {
-      sandProjShader.set("selDensityTexture", glyphGraphicsOverlay);
+      if (videoTextureParamControl){
+        //sandProjShader.set("selDensityTexture", video);
+        sandProjShader.set("selDensityTexture", inputImg);
+      } else {
+        sandProjShader.set("selDensityTexture", glyphGraphicsOverlay);
+      }
     } else {
       sandProjShader.set("selDensityTexture", blankGraphicsMid);
     }
