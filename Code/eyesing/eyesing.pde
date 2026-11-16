@@ -222,7 +222,7 @@ void setup(){
   //video = new Movie(this, "cymatique_edited.mp4");
   video.loop();
   
-  inputImg = loadImage("lulu_intro.jpg");
+  inputImg = loadImage("sorok_pervyi_intro.png");
   //inputImg.filter(INVERT);
   
   // Noise probability modulation
