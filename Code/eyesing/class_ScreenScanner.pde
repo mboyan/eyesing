@@ -87,19 +87,19 @@ class ScreenScanner{
       fill(0);
       noStroke();
       rectMode(CORNER);
-      if(bands[0] < lvlThresh[0]){
+      if(!bandTriggers[0]){
         rect(pos.x + winSize*0.5, pos.y, maskWidth, maskWidth + winSize*0.5);
         rect(pos.x, pos.y + winSize*0.5, maskWidth + winSize*0.5, maskWidth);
       }
-      if(bands[1] < lvlThresh[1]){
+      if(!bandTriggers[1]){
         rect(pos.x + winSize*0.5, pos.y, maskWidth, -maskWidth - winSize*0.5);
         rect(pos.x, pos.y - winSize*0.5, maskWidth + winSize*0.5, -maskWidth);
       }
-      if(bands[2] < lvlThresh[2]){
+      if(!bandTriggers[2]){
         rect(pos.x - winSize*0.5, pos.y, -maskWidth, maskWidth + winSize*0.5);
         rect(pos.x, pos.y + winSize*0.5, -maskWidth - winSize*0.5, maskWidth);
       }
-      if(bands[3] < lvlThresh[3]){
+      if(!bandTriggers[3]){
         rect(pos.x - winSize*0.5, pos.y, -maskWidth, -maskWidth - winSize*0.5);
         rect(pos.x, pos.y - winSize*0.5, -maskWidth - winSize*0.5, -maskWidth);
       }

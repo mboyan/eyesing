@@ -1,3 +1,6 @@
+import supercollider.*;
+import oscP5.*;
+import netP5.*;
 import ddf.minim.*;
 import ddf.minim.analysis.*;
 import processing.video.*;
@@ -20,6 +23,18 @@ ScreenScanner screenScanner;
 boolean scanToggle, scannerCtrl, scannerAdapt;
 float bSampleA, bSampleB;
 
+// Slit scanner variables
+boolean toggleSlitScan = true;
+int scanPosXA, scanPosXB;
+int scanTrailXA, scanTrailXB;
+int scanSpeedXA, scanSpeedXB;
+int trailLength = 50;
+
+// Frame variables
+boolean toggleFrame = true;
+int posFrameLeftAbs, posFrameTopAbs;
+float posFrameRightRel, posFrameBottomRel;
+
 // Texture parameter control
 float sweepSpeedA, sweepSpeedB, sweepSpeedC, sweepSpeedD;
 float sweepLineWA, sweepLineWB, sweepLineWC, sweepLineWD;
@@ -36,6 +51,7 @@ FFT fft;
 AudioInput in;
 boolean audioReact = true;
 float[] bands;
+boolean[] bandTriggers;
 int bandShiftIdx;
 float[] lvlThresh = {2.0, 0.5, 0.25, 0.125};
 
@@ -76,11 +92,20 @@ boolean toggleSelDensMod = false;
 // MIDI
 MidiBus f1Bus, x1Bus;
 
+// SuperCollider
+float[] scSamplesLeft, scSamplesRight;
+Buffer scBufferLeft, scBufferRight, scBufDelayLeft, scBufDelayRight;
+Synth scSynth;
+boolean toggleSendAudioSamples = true;
+int allocatedCount = 0;
+boolean synthCreated = false;
+
 void setup(){
   
   //size(540, 540, P2D);
   //size(800, 800, P2D);
-  size(1080, 1350, P2D); // 4:5 format
+  //size(1024, 1024, P2D);
+  //size(1080, 1350, P2D); // 4:5 format
   //size(1350, 1080, P2D); // 5:4 format
   //size(1600, 1600, P2D);
   //size(1920, 1080, P2D);
@@ -88,10 +113,29 @@ void setup(){
   //size(1080, 360, P2D);
   //size(1754, 1240, P2D); // A4 150dpi
   //size(1500, 500, P2D);
-  //fullScreen(P2D, 2);
+  fullScreen(P2D, 2);
   //fullScreen(P2D);
   pixelDensity(1); // For Processing 4.5.2
   textureWrap(REPEAT);
+  
+  // Initialize SuperCollider variables
+  scSamplesLeft = new float[height];
+  scSamplesRight = new float[height];
+  scSynth = new Synth("playbufDouble");
+  scSynth.set("loop", 1);
+  scBufferLeft = new Buffer(height, 1);
+  scBufferLeft.alloc(this, "allocatedLeft");
+  scBufferRight = new Buffer(height, 1);
+  scBufferRight.alloc(this, "allocatedRight");
+  scBufDelayLeft = new Buffer(height, 1);
+  scBufDelayLeft.alloc(this, "allocatedDelayLeft");
+  scBufDelayRight = new Buffer(height, 1);
+  scBufDelayRight.alloc(this, "allocatedDelayRight");
+  //scSynth.create();
+  scanPosXA = 0;
+  scanPosXB = width - 1;
+  scanSpeedXA = 1;
+  scanSpeedXB = -1;
   
   // Initialize MIDI
   MidiBus.list(); // List all available Midi devices on STDOUT. This will show each device's index and name.
@@ -110,6 +154,10 @@ void setup(){
   //println(in.bufferSize());
   fft = new FFT(512, in.sampleRate());
   bands = new float[4];
+  bandTriggers = new boolean[4];
+  for (int i = 0; i < 4; i++) {
+    bandTriggers[i] = false;
+  }
   bandShiftIdx = 0;
   
   // PGraphics objects
@@ -221,6 +269,7 @@ void setup(){
   //video = new Movie(this, "GlitchmanWalking.mp4");
   //video = new Movie(this, "cymatique_edited.mp4");
   video.loop();
+  video.volume(0);
   
   inputImg = loadImage("sorok_pervyi_intro.png");
   //inputImg.filter(INVERT);
@@ -268,12 +317,18 @@ void setup(){
   avalancheShader.set("maxHops", (float) maxHops);
   avalancheShader.set("grainSize", grainSize);
   avalancheGraphics = createGraphics(width, height, P2D);
+  
+  // Initial blank spin graphics
+  renderGraphics(spinGraphics, 0);
 }
 
 
 void draw(){
   
   //println(frameCount);
+  
+  // Save buffer slits
+  sendAudioSamples(spinGraphics, scanPosXA, scanPosXB, scBufDelayLeft, scBufDelayRight);
   
   // ===== Analyze sound =====
   //if(frameCount > 30){
@@ -309,6 +364,15 @@ void draw(){
       bands[(bandShiftIdx+3)%4] += fft.getBand(i);
     }
     bands[(bandShiftIdx+3)%4] /= fft.specSize()*0.25;
+    
+    // Band threshold triggers
+    for (int i = 0; i < 4; i++) {
+      if(bands[i] > lvlThresh[i]) {
+        bandTriggers[i] = true;
+      } else {
+        bandTriggers[i] = false;
+      }
+    }
   }
   
   // ===========================
@@ -579,8 +643,25 @@ void draw(){
   //fill(0);
   //rect(0, 0, width, height);
   
+  // Slit scan
+  scanPosXA = (scanPosXA + scanSpeedXA + width) % width;
+  scanPosXB = (scanPosXB + scanSpeedXB + width) % width;
+  if (toggleSlitScan){
+    for (int i = 0; i < trailLength; i++){
+      stroke(0, 255, 127, 255.*(1. - float(i)/trailLength));
+      strokeWeight(1);
+      scanTrailXA = scanSpeedXA == 0 ? scanPosXA : scanPosXA - i*scanSpeedXA/abs(scanSpeedXA);
+      scanTrailXB = scanSpeedXB == 0 ? scanPosXB : scanPosXB - i*scanSpeedXB/abs(scanSpeedXB);
+      line(scanTrailXA, 0, scanTrailXA, height);
+      line(scanTrailXB, 0, scanTrailXB, height);
+    }
+    if (toggleSendAudioSamples){
+      sendAudioSamples(spinGraphics, scanPosXA, scanPosXB, scBufferLeft, scBufferRight);
+    }
+  }
+  
   // Crosshair
-  if(scanToggle){
+  if (scanToggle){
     
     bSampleA = screenScanner.scan();
     //fill(255, 0, 0);
@@ -606,7 +687,43 @@ void draw(){
     }
   }
   
+  // Frame
+  if (toggleFrame){
+    
+  }
+  
   //saveFrame();
+}
+
+void allocationFinished() {
+  allocatedCount++;
+  println(allocatedCount);
+
+  if (allocatedCount == 4 && !synthCreated) {
+    synthCreated = true;
+    scSynth.create();
+    println("SYNTH CREATED");
+  }
+}
+
+void allocatedLeft(Buffer buffer) {
+  scSynth.set("bufnumA", buffer.index);
+  allocationFinished();
+}
+
+void allocatedRight(Buffer buffer) {
+  scSynth.set("bufnumB", buffer.index);
+  allocationFinished();
+}
+
+void allocatedDelayLeft(Buffer buffer) {
+  scSynth.set("bufDelayA", buffer.index);
+  allocationFinished();
+}
+
+void allocatedDelayRight(Buffer buffer) {
+  scSynth.set("bufDelayB", buffer.index);
+  allocationFinished();
 }
 
 void mouseDragged(){

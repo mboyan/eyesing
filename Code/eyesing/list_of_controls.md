@@ -1,4 +1,4 @@
-===SCANNER CONTROLS===
+===CROSSHAIR SCANNER CONTROLS===
 
 scanToggle - bool X \[X1 MODE right]
 
@@ -6,9 +6,19 @@ scannerCtrl - bool X \[X1 FX1 right]
 
 scannerAdapt - bool X \[X1 FX2 right]
 
-toggleRotate - bool X \[F1 browse]
+toggleRotate - bool X \[F1 browse push]
 
 maskWidthFactor - float X \[F1 select knob]
+
+
+
+===SLIT SCAN CONTROLS===
+
+toggleSlitScan - bool X \[X1 play left]
+
+scanSpeedXA - int X \[X1 fx buttons left]
+
+scanSpeedXB - int X \[X1 fx buttons right]
 
 
 
@@ -88,7 +98,7 @@ probModEdge2 - float X \[X1 knob 4 left]
 
 noiseBlend - float X \[X1 knob 1 left]
 
-quantizeNoise - bool X \[F1 small knob push]
+quantizeNoise - bool X \[F1 browse knob]
 
 
 

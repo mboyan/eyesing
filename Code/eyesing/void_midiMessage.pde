@@ -46,8 +46,8 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
       video.loop();
     }
     else if (chan == 18 && val == 127){
-      screenScanner.toggleRotate = !screenScanner.toggleRotate;
-      println("toggleRotate: " + str(screenScanner.toggleRotate));
+      quantizeNoise = !quantizeNoise;
+      println("quantizeNoise: " + str(quantizeNoise));
     }
     else if (chan == 37 && val == 127) {
       modA = 255 - modA;
@@ -65,7 +65,8 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
       screenScanner.maskWidthFactor = val / 127.0;
     }
     else if (chan == 42 && val == 127) {
-      quantizeNoise = !quantizeNoise;
+      screenScanner.toggleRotate = !screenScanner.toggleRotate;
+      println("toggleRotate: " + str(screenScanner.toggleRotate));
     }
   }
   else if (message.getStatus() == 144) // X1 toggle message
@@ -116,6 +117,22 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
       maxAvalancheSteps = min(maxAvalancheSteps + 1, 10);
       println("maxAvalancheSteps: " + str(maxAvalancheSteps));
     }
+    else if (chan == 20){
+      scanSpeedXA = max(scanSpeedXA - 1, -width);
+      println("scanSpeedXA: " + str(scanSpeedXA));
+    }
+    else if (chan == 21){
+      scanSpeedXB = max(scanSpeedXB - 1, -width);
+      println("scanSpeedXA: " + str(scanSpeedXB));
+    }
+    else if (chan == 22){
+      scanSpeedXA = min(scanSpeedXA + 1, width);
+      println("scanSpeedXA: " + str(scanSpeedXA));
+    }
+    else if (chan == 23){
+      scanSpeedXB = min(scanSpeedXB + 1, width);
+      println("scanSpeedXB: " + str(scanSpeedXB));
+    }
     else if (chan == 26){
       toggleSandDunes = !toggleSandDunes;
       println("toggleSandDunes: " + str(toggleSandDunes));
@@ -151,6 +168,10 @@ void midiMessage(MidiMessage message) { // You can also use midiMessage(MidiMess
     }
     else if (chan == 37) {
       glyphTextureCtrlIdx = 3;
+    }
+    else if (chan == 44) {
+      toggleSlitScan = !toggleSlitScan;
+      println("toggleSlitScan: " + str(toggleSlitScan));
     }
   }
   else if (message.getStatus() == 176) // X1 knob message
