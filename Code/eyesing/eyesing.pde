@@ -90,7 +90,8 @@ float grainSize = 1.0 / 32.0;
 boolean toggleSelDensMod = false;
 
 // MIDI
-MidiBus f1Bus, x1Bus;
+MidiBus f1Bus, x1Bus, opzBus;
+String f1BusName, x1BusName, opzBusName;
 
 // SuperCollider
 float[] scSamplesLeft, scSamplesRight;
@@ -141,10 +142,16 @@ void setup(){
   MidiBus.list(); // List all available Midi devices on STDOUT. This will show each device's index and name.
   f1Bus = new MidiBus();
   f1Bus.registerParent(this);
-  f1Bus.addInput(1);
+  f1BusName = f1Bus.getBusName();
+  f1Bus.addInput("Traktor Kontrol F1 - 1");
   x1Bus = new MidiBus();
   x1Bus.registerParent(this);
-  x1Bus.addInput(2);
+  x1BusName = x1Bus.getBusName();
+  x1Bus.addInput("Traktor Kontrol X1 MK2 - 1");
+  opzBus = new MidiBus();
+  opzBus.registerParent(this);
+  opzBus.addInput("OP-Z");
+  opzBusName = opzBus.getBusName();
   
   // Initialize minim and track
   minim = new Minim(this);
@@ -384,8 +391,8 @@ void draw(){
     paramGraphicsA.background(127);
     paramGraphicsA.stroke(modA);
     paramGraphicsA.strokeWeight(sweepLineWA);
-    lineXA += sweepSpeedA + 0.5*sweepLineWA;
-    lineXA = lineXA%(width + sweepLineWA);
+    lineXA += sweepSpeedA;
+    lineXA = (width + lineXA + 1.5*sweepLineWA)%(width + sweepLineWA);
     lineXA -= 0.5*sweepLineWA;
     paramGraphicsA.line(lineXA, 0, lineXA, height);
   } else {
@@ -398,8 +405,8 @@ void draw(){
     paramGraphicsB.background(127);
     paramGraphicsB.stroke(modB);
     paramGraphicsB.strokeWeight(sweepLineWB);
-    lineXB += sweepSpeedB + 0.5*sweepLineWB;
-    lineXB = lineXB%(width + sweepLineWB);
+    lineXB += sweepSpeedB;
+    lineXB = (width + lineXB + 1.5*sweepLineWB)%(width + sweepLineWB);
     lineXB -= 0.5*sweepLineWB;
     paramGraphicsB.line(lineXB, 0, lineXB, height);
   } else {
@@ -412,8 +419,8 @@ void draw(){
     paramGraphicsC.background(127);
     paramGraphicsC.stroke(modC);
     paramGraphicsC.strokeWeight(sweepLineWC);
-    lineXC += sweepSpeedC + 0.5*sweepLineWC;
-    lineXC = lineXC%(width + sweepLineWC);
+    lineXC += sweepSpeedC;
+    lineXC = (width + lineXC + 1.5*sweepLineWC)%(width + sweepLineWC);
     lineXC -= 0.5*sweepLineWC;
     paramGraphicsC.line(lineXC, 0, lineXC, height);
   } else {
@@ -428,8 +435,8 @@ void draw(){
     noiseModGraphics.background(modD);
     noiseModGraphics.stroke(255 - modD);
     noiseModGraphics.strokeWeight(sweepLineWD);
-    lineXD += sweepSpeedD + 0.5*sweepLineWD;
-    lineXD = lineXD%(width + sweepLineWD);
+    lineXD += sweepSpeedD;
+    lineXD = (width + lineXD + 1.5*sweepLineWD)%(width + sweepLineWD);
     lineXD -= 0.5*sweepLineWD;
     noiseModGraphics.line(lineXD, 0, lineXD, height);
   } else {
@@ -480,12 +487,12 @@ void draw(){
     if (videoInvert) {
       video.filter(INVERT);
     }
-    //shader.set("paramTextureBeta", video);
-    //shader.set("paramTextureField", video);
-    //shader.set("paramTextureInteract", video);
-    shader.set("paramTextureBeta", inputImg);
-    shader.set("paramTextureField", inputImg);
-    shader.set("paramTextureInteract", inputImg);
+    shader.set("paramTextureBeta", video);
+    shader.set("paramTextureField", video);
+    shader.set("paramTextureInteract", video);
+    //shader.set("paramTextureBeta", inputImg);
+    //shader.set("paramTextureField", inputImg);
+    //shader.set("paramTextureInteract", inputImg);
   } else {
     if (glyphTextureCtrlIdx == 1){
       shader.set("paramTextureBeta", glyphGraphicsTexCtrl);
@@ -541,8 +548,8 @@ void draw(){
     sandProjShader.set("shadowTexture", shadowGraphics);
     if (toggleSelDensMod) {
       if (videoTextureParamControl){
-        //sandProjShader.set("selDensityTexture", video);
-        sandProjShader.set("selDensityTexture", inputImg);
+        sandProjShader.set("selDensityTexture", video);
+        //sandProjShader.set("selDensityTexture", inputImg);
       } else {
         sandProjShader.set("selDensityTexture", glyphGraphicsOverlay);
       }
