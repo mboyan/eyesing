@@ -43,3 +43,5 @@ MIDIdef.noteOn(
 )
 
 MIDIdef.freeAll*/
+
+{SinOsc.ar(40, mul:0.5)}.play

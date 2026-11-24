@@ -32,8 +32,7 @@ int trailLength = 50;
 
 // Frame variables
 boolean toggleFrame = true;
-int posFrameLeftAbs, posFrameTopAbs;
-float posFrameRightRel, posFrameBottomRel;
+int posFrameLeftAbs, posFrameTopAbs, posFrameRightRel, posFrameBottomRel;
 
 // Texture parameter control
 float sweepSpeedA, sweepSpeedB, sweepSpeedC, sweepSpeedD;
@@ -52,6 +51,7 @@ AudioInput in;
 boolean audioReact = true;
 float[] bands;
 boolean[] bandTriggers;
+boolean[] bandTrigLatches;
 int bandShiftIdx;
 float[] lvlThresh = {2.0, 0.5, 0.25, 0.125};
 
@@ -60,7 +60,7 @@ boolean glyphOverlay = false;
 float glyphSeedA, glyphSeedB;
 float glyphRepeatX = 1;
 float glyphRepeatY = 1;
-int glyphTextureCtrlIdx = 2; // 0 for none, 1 for beta, 2 for field, 3 for interact
+int glyphTextureCtrlIdx = 0; // 0 for none, 1 for beta, 2 for field, 3 for interact
 
 // Video reading
 Movie video;
@@ -107,14 +107,14 @@ void setup(){
   //size(800, 800, P2D);
   //size(1024, 1024, P2D);
   //size(1080, 1350, P2D); // 4:5 format
-  //size(1350, 1080, P2D); // 5:4 format
+  size(1350, 1080, P2D); // 5:4 format
   //size(1600, 1600, P2D);
   //size(1920, 1080, P2D);
   //size(540, 810, P2D);
   //size(1080, 360, P2D);
   //size(1754, 1240, P2D); // A4 150dpi
   //size(1500, 500, P2D);
-  fullScreen(P2D, 2);
+  //fullScreen(P2D, 2);
   //fullScreen(P2D);
   pixelDensity(1); // For Processing 4.5.2
   textureWrap(REPEAT);
@@ -162,8 +162,10 @@ void setup(){
   fft = new FFT(512, in.sampleRate());
   bands = new float[4];
   bandTriggers = new boolean[4];
+  bandTrigLatches = new boolean[4];
   for (int i = 0; i < 4; i++) {
     bandTriggers[i] = false;
+    bandTrigLatches[i] = false;
   }
   bandShiftIdx = 0;
   
@@ -240,6 +242,12 @@ void setup(){
   scanToggle = true;
   scannerCtrl = false;
   scannerAdapt = true;
+  
+  // Frame initial parameters
+  posFrameLeftAbs = 0;
+  posFrameTopAbs = 0;
+  posFrameRightRel = width;
+  posFrameBottomRel = height;
   
   // Line patterns for parameter control
   sweepSpeedA = -5;
@@ -375,8 +383,15 @@ void draw(){
     // Band threshold triggers
     for (int i = 0; i < 4; i++) {
       if(bands[i] > lvlThresh[i]) {
+        // Activate latch if it's the first trigger in a series
+        if (bandTriggers[i]) {
+          bandTrigLatches[i] = false;
+        } else {
+          bandTrigLatches[i] = true;
+        }
         bandTriggers[i] = true;
       } else {
+        bandTrigLatches[i] = false;
         bandTriggers[i] = false;
       }
     }
@@ -696,7 +711,26 @@ void draw(){
   
   // Frame
   if (toggleFrame){
-    
+    // Recalculate frame positions
+    if (bandTrigLatches[0]) {
+      posFrameLeftAbs = int((random(1.0)) * width);
+    }
+    if (bandTrigLatches[1]) {
+      posFrameRightRel = posFrameLeftAbs + int((1.0 - (random(1.0))) * (width - posFrameLeftAbs));
+    }
+    if (bandTrigLatches[2]) {
+      posFrameTopAbs = int(random(1.0) * height);
+    }
+    if (bandTrigLatches[3]) {
+      posFrameBottomRel = posFrameTopAbs + int((1.0 - (random(1.0))) * (height - posFrameTopAbs));
+    }
+    rectMode(CORNER);
+    fill(0);
+    noStroke();
+    rect(0, 0, posFrameLeftAbs, height);
+    rect(posFrameRightRel, 0, width - posFrameRightRel, height);
+    rect(0, 0, width, posFrameTopAbs);
+    rect(0, posFrameBottomRel, width, height - posFrameBottomRel);
   }
   
   //saveFrame();
