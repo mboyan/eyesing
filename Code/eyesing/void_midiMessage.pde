@@ -1,12 +1,12 @@
 void noteOn(int channel, int number, int velocity, long timestamp, String busName) {
-  //println();
-  //println("Note On:");
-  //println("--------");
-  //println("Channel:"+channel);
-  //println("Pitch:"+pitch);
-  //println("Velocity:"+velocity);
-  //println("Timestamp:"+timestamp);
-  //println("Recieved on Bus:"+busName);
+  println();
+  println("Note On:");
+  println("--------");
+  println("Channel:"+channel);
+  println("Pitch:"+number);
+  println("Velocity:"+velocity);
+  println("Timestamp:"+timestamp);
+  println("Recieved on Bus:"+busName);
   
   if (busName == opzBusName) {
     scSynth.set("rateMidiNote", number);
@@ -113,8 +113,12 @@ void noteOn(int channel, int number, int velocity, long timestamp, String busNam
       glyphTextureCtrlIdx = 3;
     }
     else if (number == 44) {
-      toggleSlitScan = !toggleSlitScan;
-      println("toggleSlitScan: " + str(toggleSlitScan));
+      toggleSlitScanX = !toggleSlitScanX;
+      println("toggleSlitScanX: " + str(toggleSlitScanX));
+    }
+    else if (number == 45) {
+      toggleSlitScanY = !toggleSlitScanY;
+      println("toggleSlitScanY: " + str(toggleSlitScanY));
     }
   }
 }
@@ -127,14 +131,14 @@ void noteOff(int channel, int pitch, int velocity, long timestamp, String busNam
 }
 
 void controllerChange(int channel, int number, int val, long timestamp, String busName) {
-  //println();
-  //println("Controller Change:");
-  //println("--------");
-  //println("Channel:"+channel);
-  //println("Number:"+number);
-  //println("Value:"+val);
-  //println("Timestamp:"+timestamp);
-  //println("Recieved on Bus:"+busName);
+  println();
+  println("Controller Change:");
+  println("--------");
+  println("Channel:"+channel);
+  println("Number:"+number);
+  println("Value:"+val);
+  println("Timestamp:"+timestamp);
+  println("Recieved on Bus:"+busName);
   //if (busName == x1BusName) {
   //  println("This came from X1");
   //} else if (busName == f1BusName) {
@@ -181,9 +185,13 @@ void controllerChange(int channel, int number, int val, long timestamp, String b
       video = new Movie(this, videoTitles[number - 10]);
       video.loop();
     }
-    else if (number == 18 && number == 127){
+    else if (number == 17 && val == 127){
       quantizeNoise = !quantizeNoise;
       println("quantizeNoise: " + str(quantizeNoise));
+    }
+    else if (number == 18 && val == 127){
+      screenScanner.showCross = !screenScanner.showCross;
+      println("showCross: " + str(screenScanner.showCross));
     }
     else if (number == 37 && val == 127) {
       modA = 255 - modA;
@@ -247,8 +255,12 @@ void controllerChange(int channel, int number, int val, long timestamp, String b
       hopDist = min(max(hopDist, 1.0), width*0.5);
       println("hopDist: " + str(hopDist));
     }
+    else if (number == 29) {
+      scanSpeedY = (int) map(val, 0, 127, -63, 63);
+      println("scanSpeedY: " + str(scanSpeedY));
+    }
   }
-  else if (busName == opzBusName) // OPZ synth control
+  else if (busName == opzBusName) // OP-Z synth control
   {
     //println();
     //println("Controller Change:");
@@ -275,6 +287,14 @@ void controllerChange(int channel, int number, int val, long timestamp, String b
     }
     else if (number == 8) {
       scSynth.set("rel", map(val, 0, 127, 0, 2.0));
+    }
+    else if (number == 9) {
+      scSynth.set("ampLFO", map(val, 0, 127, 0, 1.0));
+      println(map(val, 0, 127, 0, 1.0));
+    }
+    else if (number == 10) {
+      scSynth.set("rateLFO", map(val, 0, 127, 1/2048, 0.25));
+      println(map(val, 0, 127, 1./2048., 0.25));
     }
   }
 }

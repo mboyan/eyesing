@@ -26,8 +26,8 @@ class ScreenScanner{
     
     //penaltyVec = new PVector(0.0, 0.0);
     showLargeFrame = false;
-    showCross = true;
-    toggleRotate = true;
+    showCross = false;
+    toggleRotate = false;
     
     maskWidthFactor = 0.05;
   }

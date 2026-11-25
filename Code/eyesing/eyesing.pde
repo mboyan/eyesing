@@ -24,14 +24,15 @@ boolean scanToggle, scannerCtrl, scannerAdapt;
 float bSampleA, bSampleB;
 
 // Slit scanner variables
-boolean toggleSlitScan = true;
-int scanPosXA, scanPosXB;
-int scanTrailXA, scanTrailXB;
-int scanSpeedXA, scanSpeedXB;
+boolean toggleSlitScanX = true;
+boolean toggleSlitScanY = true;
+int scanPosXA, scanPosXB, scanPosY;
+int scanTrailXA, scanTrailXB, scanTrailY;
+int scanSpeedXA, scanSpeedXB, scanSpeedY;
 int trailLength = 50;
 
 // Frame variables
-boolean toggleFrame = true;
+boolean toggleFrame = false;
 int posFrameLeftAbs, posFrameTopAbs, posFrameRightRel, posFrameBottomRel;
 
 // Texture parameter control
@@ -94,8 +95,8 @@ MidiBus f1Bus, x1Bus, opzBus;
 String f1BusName, x1BusName, opzBusName;
 
 // SuperCollider
-float[] scSamplesLeft, scSamplesRight;
-Buffer scBufferLeft, scBufferRight, scBufDelayLeft, scBufDelayRight;
+float[] scSamplesLeft, scSamplesRight, scSamplesLFO;
+Buffer scBufLeft, scBufRight, scBufDelayLeft, scBufDelayRight, scBufLFO;
 Synth scSynth;
 boolean toggleSendAudioSamples = true;
 int allocatedCount = 0;
@@ -106,8 +107,8 @@ void setup(){
   //size(540, 540, P2D);
   //size(800, 800, P2D);
   //size(1024, 1024, P2D);
-  //size(1080, 1350, P2D); // 4:5 format
-  size(1350, 1080, P2D); // 5:4 format
+  size(1080, 1350, P2D); // 4:5 format
+  //size(1350, 1080, P2D); // 5:4 format
   //size(1600, 1600, P2D);
   //size(1920, 1080, P2D);
   //size(540, 810, P2D);
@@ -124,19 +125,23 @@ void setup(){
   scSamplesRight = new float[height];
   scSynth = new Synth("playbufDouble");
   scSynth.set("loop", 1);
-  scBufferLeft = new Buffer(height, 1);
-  scBufferLeft.alloc(this, "allocatedLeft");
-  scBufferRight = new Buffer(height, 1);
-  scBufferRight.alloc(this, "allocatedRight");
+  scBufLeft = new Buffer(height, 1);
+  scBufLeft.alloc(this, "allocatedLeft");
+  scBufRight = new Buffer(height, 1);
+  scBufRight.alloc(this, "allocatedRight");
   scBufDelayLeft = new Buffer(height, 1);
   scBufDelayLeft.alloc(this, "allocatedDelayLeft");
   scBufDelayRight = new Buffer(height, 1);
   scBufDelayRight.alloc(this, "allocatedDelayRight");
+  scBufLFO = new Buffer(width, 1);
+  scBufLeft.alloc(this, "allocatedLFO");
   //scSynth.create();
   scanPosXA = 0;
   scanPosXB = width - 1;
+  scanPosY = 0;
   scanSpeedXA = 1;
   scanSpeedXB = -1;
+  scanSpeedY = 1;
   
   // Initialize MIDI
   MidiBus.list(); // List all available Midi devices on STDOUT. This will show each device's index and name.
@@ -665,10 +670,11 @@ void draw(){
   //fill(0);
   //rect(0, 0, width, height);
   
-  // Slit scan
+  // Slit scans
   scanPosXA = (scanPosXA + scanSpeedXA + width) % width;
   scanPosXB = (scanPosXB + scanSpeedXB + width) % width;
-  if (toggleSlitScan){
+  scanPosY = (scanPosY + scanSpeedY + height) % height;
+  if (toggleSlitScanX){
     for (int i = 0; i < trailLength; i++){
       stroke(0, 255, 127, 255.*(1. - float(i)/trailLength));
       strokeWeight(1);
@@ -678,7 +684,15 @@ void draw(){
       line(scanTrailXB, 0, scanTrailXB, height);
     }
     if (toggleSendAudioSamples){
-      sendAudioSamples(spinGraphics, scanPosXA, scanPosXB, scBufferLeft, scBufferRight);
+      sendAudioSamples(spinGraphics, scanPosXA, scanPosXB, scBufLeft, scBufRight);
+    }
+  }
+  if (toggleSlitScanY){
+    for (int i = 0; i < trailLength; i++){
+      stroke(0, 255, 127, 255.*(1. - float(i)/trailLength));
+      strokeWeight(1);
+      scanTrailY = scanSpeedY == 0 ? scanPosY : scanPosY - i*scanSpeedY/abs(scanSpeedY);
+      line(0, scanTrailY, width, scanTrailY);
     }
   }
   
@@ -740,7 +754,7 @@ void allocationFinished() {
   allocatedCount++;
   println(allocatedCount);
 
-  if (allocatedCount == 4 && !synthCreated) {
+  if (allocatedCount == 5 && !synthCreated) {
     synthCreated = true;
     scSynth.create();
     println("SYNTH CREATED");
@@ -764,6 +778,11 @@ void allocatedDelayLeft(Buffer buffer) {
 
 void allocatedDelayRight(Buffer buffer) {
   scSynth.set("bufDelayB", buffer.index);
+  allocationFinished();
+}
+
+void allocatedLFO(Buffer buffer) {
+  scSynth.set("bufLFO", buffer.index);
   allocationFinished();
 }
 

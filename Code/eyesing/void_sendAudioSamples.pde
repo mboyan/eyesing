@@ -9,3 +9,11 @@ void sendAudioSamples(PGraphics scannedGraphics, int scanPosXA, int scanPosXB, B
   bufLeft.setn(0, height, scSamplesLeft);
   bufRight.setn(0, height, scSamplesRight);
 }
+
+void sendLFOSamples(PGraphics scannedGraphics, int scanPosY, Buffer buffer){
+  scannedGraphics.loadPixels();
+  for (int i = 0; i < width; i++){
+    scSamplesLFO[i] = brightness(scannedGraphics.pixels[scanPosY*width + i])/255.;
+  }
+  buffer.setn(0, height, scSamplesLFO);
+}

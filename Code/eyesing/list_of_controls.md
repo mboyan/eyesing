@@ -6,7 +6,7 @@ scannerCtrl - bool X \[X1 FX1 right]
 
 scannerAdapt - bool X \[X1 FX2 right]
 
-toggleRotate - bool X \[F1 browse push]
+toggleRotate - bool X \[F1 select knob push]
 
 maskWidthFactor - float X \[F1 select knob]
 
@@ -98,7 +98,7 @@ probModEdge2 - float X \[X1 knob 4 left]
 
 noiseBlend - float X \[X1 knob 1 left]
 
-quantizeNoise - bool X \[F1 browse knob]
+quantizeNoise - bool X \[F1 browse button]
 
 
 
