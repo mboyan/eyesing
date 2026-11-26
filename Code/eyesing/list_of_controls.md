@@ -24,6 +24,12 @@ scanSpeedXB - int X \[X1 fx buttons right]
 
 
 
+===AUDIO-REACTIVE FRAME CONTROLS===
+
+toggleFrame - bool X \[X1 cue left]
+
+
+
 ===LINE TEXTURE CONTROLS===
 
 ~~lineTextureParamCtrl - bool X \[X1 FX2 left]~~
