@@ -29,7 +29,10 @@ SynthDef(\playbufDouble, {
 	sig = 0.5*sig + (0.25*sigDelay) + (0.125*Delay1.ar(sig)) + (0.0675*Delay1.ar(sigDelay));
 	// sig = sig[1] - sig[0];
 	// sig = IFFT(PV_MagMul(FFT(LocalBuf(1024), WhiteNoise.ar), bufnumA));
-	Out.ar(out, sig*env*(1.0 + ((lfo - 1.0)*ampLFO)));
+	// Out.ar(out, sig*env*(1.0 + ((lfo - 1.0)*ampLFO)));
+	// sig = FreeVerb.ar(sig*env*(1.0 + ((lfo - 1.0)*ampLFO)));
+	sig = AllpassC.ar(sig*env*(1.0 + ((lfo - 1.0)*ampLFO)), 0.2, 0.05, 0.02, 2.0);
+	Out.ar(out, sig);
 }).add;
 )
 
@@ -45,5 +48,10 @@ MIDIdef.noteOn(
 )
 
 MIDIdef.freeAll*/
+
+ServerOptions.devices[1]
+s.options.outDevice_(ServerOptions.devices[1])
+
+s.options.outDevice
 
 {SinOsc.ar(40, mul:0.5)}.play

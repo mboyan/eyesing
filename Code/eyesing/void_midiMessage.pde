@@ -112,6 +112,10 @@ void noteOn(int channel, int number, int velocity, long timestamp, String busNam
     else if (number == 37) {
       glyphTextureCtrlIdx = 3;
     }
+    else if (number == 42){
+      toggleFrame = !toggleFrame;
+      println("toggleFrame: " + str(toggleFrame));
+    }
     else if (number == 44) {
       toggleSlitScanX = !toggleSlitScanX;
       println("toggleSlitScanX: " + str(toggleSlitScanX));

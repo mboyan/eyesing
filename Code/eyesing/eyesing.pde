@@ -32,7 +32,7 @@ int scanSpeedXA, scanSpeedXB, scanSpeedY;
 int trailLength = 50;
 
 // Frame variables
-boolean toggleFrame = false;
+boolean toggleFrame = true;
 int posFrameLeftAbs, posFrameTopAbs, posFrameRightRel, posFrameBottomRel;
 
 // Texture parameter control
@@ -107,8 +107,8 @@ void setup(){
   //size(540, 540, P2D);
   //size(800, 800, P2D);
   //size(1024, 1024, P2D);
-  size(1080, 1350, P2D); // 4:5 format
-  //size(1350, 1080, P2D); // 5:4 format
+  //size(1080, 1350, P2D); // 4:5 format
+  size(1350, 1080, P2D); // 5:4 format
   //size(1600, 1600, P2D);
   //size(1920, 1080, P2D);
   //size(540, 810, P2D);
@@ -244,8 +244,8 @@ void setup(){
   
   // Create and turn on scanner
   screenScanner = new ScreenScanner(width*0.5, height*0.5, width*0.25, 100);
-  scanToggle = true;
-  scannerCtrl = false;
+  scanToggle = false;
+  scannerCtrl = true;
   scannerAdapt = true;
   
   // Frame initial parameters

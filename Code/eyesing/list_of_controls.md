@@ -14,7 +14,9 @@ maskWidthFactor - float X \[F1 select knob]
 
 ===SLIT SCAN CONTROLS===
 
-toggleSlitScan - bool X \[X1 play left]
+toggleSlitScanX - bool X \[X1 play left]
+
+toggleSlitScanY - bool X \[X1 play right]
 
 scanSpeedXA - int X \[X1 fx buttons left]
 
